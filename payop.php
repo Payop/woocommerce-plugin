@@ -84,8 +84,8 @@ function woocommerce_payop()
         public function admin_options()
         {
             ?>
-            <h3><?php _e('PayOp', 'woocommerce'); ?></h3>
-            <p><?php _e('Настройка приема электронных платежей через PayOp.', 'woocommerce'); ?></p>
+            <h3><?php _e('PayOp', 'payop-woocommerce'); ?></h3>
+            <p><?php _e('Настройка приема электронных платежей через PayOp.', 'payop-woocommerce'); ?></p>
 
             <?php if ($this->is_valid_for_use()) : ?>
 
@@ -99,8 +99,8 @@ function woocommerce_payop()
         <?php else : ?>
             <div class="inline error"><p>
                     <strong><?php _e('Шлюз отключен',
-                            'woocommerce'); ?></strong>: <?php _e('PayOp не поддерживает валюты Вашего магазина.',
-                        'woocommerce'); ?>
+                            'payop-woocommerce'); ?></strong>: <?php _e('PayOp не поддерживает валюты Вашего магазина.',
+                        'payop-woocommerce'); ?>
                 </p></div>
             <?php
         endif;
@@ -117,52 +117,52 @@ function woocommerce_payop()
         {
             $this->form_fields = array(
                 'enabled' => array(
-                    'title' => __('Активность способа оплаты', 'woocommerce'),
+                    'title' => __('Активность способа оплаты', 'payop-woocommerce'),
                     'type' => 'checkbox',
-                    'label' => __('Активен', 'woocommerce'),
+                    'label' => __('Активен', 'payop-woocommerce'),
                     'default' => 'yes'
                 ),
                 'title' => array(
-                    'title' => __('Название способа оплаты', 'woocommerce'),
+                    'title' => __('Название способа оплаты', 'payop-woocommerce'),
                     'type' => 'text',
                     'description' => __('Название способа оплаты, которое увидит пользователь при оформлении заказа', 'woocommerce'),
-                    'default' => __('PayOp', 'woocommerce')
+                    'default' => __('PayOp', 'payop-woocommerce')
                 ),
                 'public_key' => array(
-                    'title' => __('Публичный ключ', 'woocommerce'),
+                    'title' => __('Публичный ключ', 'payop-woocommerce'),
                     'type' => 'text',
-                    'description' => __('Выдается в Личном кабинете https://payop.com', 'woocommerce'),
+                    'description' => __('Выдается в Личном кабинете https://payop.com', 'payop-woocommerce'),
                     'default' => ''
                 ),
                 'secret_key' => array(
-                    'title' => __('Секретный ключ', 'woocommerce'),
+                    'title' => __('Секретный ключ', 'payop-woocommerce'),
                     'type' => 'text',
-                    'description' => __('Выдается в Личном кабинете https://payop.com', 'woocommerce'),
+                    'description' => __('Выдается в Личном кабинете https://payop.com', 'payop-woocommerce'),
                     'default' => ''
                 ),
                 'description' => array(
-                    'title' => __('Description', 'woocommerce'),
+                    'title' => __('Description', 'payop-woocommerce'),
                     'type' => 'textarea',
                     'description' => __('Описание способа оплаты, которое клиент будет видеть на вашем сайте.',
-                        'woocommerce'),
+                        'payop-woocommerce'),
                     'default' => 'Оплата через payop.com'
                 ),
                 'auto_complete' => array(
-                    'title' => __('Автозавершение заказа', 'woocommerce'),
+                    'title' => __('Автозавершение заказа', 'payop-woocommerce'),
                     'type' => 'checkbox',
                     'label' => __('Автоматический перевод заказа в статус "Выполнен" после успешной оплаты',
-                        'woocommerce'),
-                    'description' => __('', 'woocommerce'),
+                        'payop-woocommerce'),
+                    'description' => __('', 'payop-woocommerce'),
                     'default' => '1'
                 ),
                 'payment_form_language' => array(
-                    'title' => __('Язык платежной формы', 'woocommerce'),
+                    'title' => __('Язык платежной формы', 'payop-woocommerce'),
                     'type' => 'select',
-                    'description' => __('Выберите язык платежной формы для Вашего магазина'),
+                    'description' => __('Выберите язык платежной формы для Вашего магазина', 'payop-woocommerce'),
                     'default' => 'ru',
                     'options' => array(
-                        'ru' => __('Русский', 'woocommerce'),
-                        'en' => __('Английский', 'woocommerce'),
+                        'ru' => __('Русский', 'payop-woocommerce'),
+                        'en' => __('Английский', 'payop-woocommerce'),
                     ),
                 ),
             );
@@ -212,8 +212,8 @@ function woocommerce_payop()
 			
 			$arrData['signature'] = hash( 'sha256', implode( ':', $dataSet ) );
 			
-			$arrData['order']['description'] = __('Оплата заказа #') . $order_id;
-				
+			$arrData['order']['description'] = __('Оплата заказа #', 'payop-woocommerce') . $order_id;
+			
 			$arrData['customer']['email'] = $order->get_billing_email();
 			
 			$arrData['language'] = $this->language;
@@ -226,7 +226,7 @@ function woocommerce_payop()
 			
 			if( ( isset( $response['errors'] ) and count( $response['errors'] ) ) or !isset( $response['data']['redirectUrl'] ) )
 			{
-				return '<p>' . __('Запрос к платежному сервису был отправлен некорректно') . '</p>';
+				return '<p>' . __('Запрос к платежному сервису был отправлен некорректно', 'payop-woocommerce') . '</p>';
 			}
 				
 			$action_adr = $response['data']['redirectUrl'];
@@ -235,7 +235,7 @@ function woocommerce_payop()
 		
 			return '<form action="'.esc_url($action_adr).'" method="GET" id="payop_payment_form">'."\n".
 				implode("\n", $args_array).
-				'<input type="submit" class="button alt" id="submit_payop_payment_form" value="'.__('Оплатить', 'woocommerce').'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Отказаться от оплаты & вернуться в корзину', 'woocommerce').'</a>'."\n".
+				'<input type="submit" class="button alt" id="submit_payop_payment_form" value="'.__('Оплатить', 'payop-woocommerce').'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Отказаться от оплаты & вернуться в корзину', 'payop-woocommerce').'</a>'."\n".
 			'</form>';
 		}
 
@@ -258,7 +258,7 @@ function woocommerce_payop()
 		**/
 		function receipt_page($order)
 		{
-			echo '<p>'.__('Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить.', 'woocommerce').'</p>';
+			echo '<p>'.__('Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить.', 'payop-woocommerce').'</p>';
 			
 			echo $this->generate_form($order);
 		}
@@ -332,7 +332,7 @@ function woocommerce_payop()
 				
 				$order = new WC_Order( $orderId );
 				
-				$order->update_status('processing', __('Платеж успешно оплачен', 'woocommerce'));
+				$order->update_status('processing', __('Платеж успешно оплачен', 'payop-woocommerce'));
 				
 				WC()->cart->empty_cart();
 
@@ -344,7 +344,7 @@ function woocommerce_payop()
 				
 				$order = new WC_Order( $orderId );
 				
-				$order->update_status('failed', __('Платеж не оплачен', 'woocommerce'));
+				$order->update_status('failed', __('Платеж не оплачен', 'payop-woocommerce'));
 
 				wp_redirect($order->get_cancel_order_url());
 				
