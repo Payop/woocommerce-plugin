@@ -10,13 +10,9 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 
 ### PayOp Support
 
-* [GitHub Issues](https://github.com/Payop/woocommerce-plugin/issues)
-  * Open an issue if you are having issues with this plugin.
-  https://payop.com/en/documentation/common/
-* [Documentation](https://payop.com/en/documentation/common/)
-  * PayOp documentation
-* [Support](https://payop.com/en/contact-us/)
-  * Contact PayOp support
+* [Open an issue](https://github.com/Payop/woocommerce-plugin/issues) if you are having issues with this plugin.
+* [PayOp Documentation](https://payop.com/en/documentation/common/)
+* [Contact PayOp support](https://payop.com/en/contact-us/)
   
 **TIP**: When contacting support it will help us is you provide:
 
