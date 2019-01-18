@@ -276,7 +276,7 @@ function woocommerce_payop()
 			
 			$o = array( 'id' => $orderId, 'amount' => $amount, 'currency' => get_option('woocommerce_currency') );
         	
-			ksort( $order, SORT_STRING );
+			ksort( $o, SORT_STRING );
         	
 			$dataSet = array_values( $o );
         	
