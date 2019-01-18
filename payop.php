@@ -15,6 +15,8 @@ add_action('plugins_loaded', 'woocommerce_payop', 0);
 
 function woocommerce_payop()
 {
+	load_plugin_textdomain( 'payop-woocommerce', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
+	
 	if (!class_exists('WC_Payment_Gateway')) {
         return;
     } // if the WC payment gateway class is not available, do nothing
@@ -151,7 +153,7 @@ function woocommerce_payop()
                     'label' => __('Автоматический перевод заказа в статус "Выполнен" после успешной оплаты',
                         'woocommerce'),
                     'description' => __('', 'woocommerce'),
-                    'default' => '0'
+                    'default' => '1'
                 ),
                 'payment_form_language' => array(
                     'title' => __('Язык платежной формы', 'woocommerce'),
@@ -224,7 +226,7 @@ function woocommerce_payop()
 			
 			if( ( isset( $response['errors'] ) and count( $response['errors'] ) ) or !isset( $response['data']['redirectUrl'] ) )
 			{
-				return '<p>' . 'Запрос к платежному сервису был отправлен некорректно' . '</p>';
+				return '<p>' . __('Запрос к платежному сервису был отправлен некорректно') . '</p>';
 			}
 				
 			$action_adr = $response['data']['redirectUrl'];
@@ -291,7 +293,7 @@ function woocommerce_payop()
 				
 				$order_summ = number_format( $order->order_total, 4, '.', '' );
 				
-				if( $order_summ > $amount )
+				if( $order_summ > $amount or $status != 'success' )
 				{
 					return false;
 				}
@@ -309,7 +311,7 @@ function woocommerce_payop()
 		{
 			global $woocommerce;
 
-			if( isset( $_GET['payop'] ) AND $_GET['payop'] == 'result' )
+			if( isset( $_REQUEST['payop'] ) AND $_REQUEST['payop'] == 'result' )
 			{
 				@ob_clean();
 
@@ -324,7 +326,7 @@ function woocommerce_payop()
 					wp_die('IPN Request Failure');
 				}
 			}
-			else if( isset( $_GET['payop'] ) AND $_GET['payop'] == 'success' )
+			else if( isset( $_REQUEST['payop'] ) AND $_REQUEST['payop'] == 'success' )
 			{
 				$orderId = $_REQUEST['orderId'];
 				
@@ -336,7 +338,7 @@ function woocommerce_payop()
 
 				wp_redirect( $this->get_return_url( $order ) );
 			}
-			else if( isset( $_GET['payop'] ) AND $_GET['payop'] == 'fail' )
+			else if( isset( $_REQUEST['payop'] ) AND $_REQUEST['payop'] == 'fail' )
 			{
 				$orderId = $_REQUEST['orderId'];
 				
