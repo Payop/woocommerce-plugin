@@ -273,7 +273,7 @@ function woocommerce_payop()
 
             $order = new WC_Order($orderId);
             $currency = $order->get_currency();
-            $amount = number_format($order->get_total(), 4, '.', '');;
+            $amount = number_format($order->get_total(), 4, '.', '');
 
             $status = $posted['status'];
 
@@ -297,7 +297,7 @@ function woocommerce_payop()
                 return true;
             }
 
-            return "invalid signature: {$orderId} || {$amount} || {$currency} || $status || {$this->secret_key}";
+            return "invalid signature";
         }
 
         /**
@@ -312,11 +312,11 @@ function woocommerce_payop()
 
                 $_REQUEST = stripslashes_deep($_REQUEST);
 
-                $error = $this->check_ipn_request_is_valid($_REQUEST);
-                if ($error === true) {
+                $valid = $this->check_ipn_request_is_valid($_REQUEST);
+                if ($valid === true) {
                     do_action('valid-payop-standard-ipn-reques', $_REQUEST);
                 } else {
-                    wp_die($error, $error, 400);
+                    wp_die($valid, $valid, 400);
                 }
             } else {
                 if (isset($_REQUEST['payop']) AND $_REQUEST['payop'] == 'success') {
