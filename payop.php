@@ -83,6 +83,8 @@ function woocommerce_payop()
          **/
         public function admin_options()
         {
+            global $woocommerce;
+
             ?>
             <h3><?php _e('PayOp', 'payop-woocommerce'); ?></h3>
             <p><?php _e('Настройка приема электронных платежей через PayOp.', 'payop-woocommerce'); ?></p>
@@ -97,11 +99,12 @@ function woocommerce_payop()
             </table>
 
         <?php else : ?>
-            <div class="inline error"><p>
-                    <strong><?php _e('Шлюз отключен',
-                            'payop-woocommerce'); ?></strong>: <?php _e('PayOp не поддерживает валюты Вашего магазина.',
-                        'payop-woocommerce'); ?>
-                </p></div>
+            <div class="inline error">
+                <p>
+                    <strong><?php _e('Шлюз отключен', 'payop-woocommerce'); ?></strong>:
+                    <?php _e('PayOp не поддерживает валюты Вашего магазина.', 'payop-woocommerce'); ?>
+                </p>
+            </div>
         <?php
         endif;
 
@@ -115,6 +118,8 @@ function woocommerce_payop()
          */
         function init_form_fields()
         {
+            global $woocommerce;
+
             $this->form_fields = [
                 'enabled'               => [
                     'title'   => __('Активность способа оплаты', 'payop-woocommerce'),
@@ -125,7 +130,7 @@ function woocommerce_payop()
                 'title'                 => [
                     'title'       => __('Название способа оплаты', 'payop-woocommerce'),
                     'type'        => 'text',
-                    'description' => __('Название способа оплаты, которое увидит пользователь при оформлении заказа', 'woocommerce'),
+                    'description' => __('Название способа оплаты, которое увидит пользователь при оформлении заказа', 'payop-woocommerce'),
                     'default'     => __('PayOp', 'payop-woocommerce'),
                 ],
                 'public_key'            => [
@@ -145,7 +150,7 @@ function woocommerce_payop()
                     'type'        => 'textarea',
                     'description' => __('Описание способа оплаты, которое клиент будет видеть на вашем сайте.',
                         'payop-woocommerce'),
-                    'default'     => 'Оплата через payop.com',
+                    'default'     => 'Accept online payments using PayOp.com',
                 ],
                 'auto_complete'         => [
                     'title'       => __('Автозавершение заказа', 'payop-woocommerce'),
@@ -362,7 +367,7 @@ function woocommerce_payop()
             }
 
             // Payment completed
-            $order->add_order_note(__('Платеж успешно завершен.', 'woocommerce'));
+            $order->add_order_note(__('Платеж успешно завершен.', 'payop-woocommerce'));
 
             $order->payment_complete();
 

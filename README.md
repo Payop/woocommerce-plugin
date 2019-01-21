@@ -5,6 +5,25 @@ WooCommerce PayOp Payment Gateway
 
 Add the ability to accept payments in WooCommerce via Payop.com.
 
+## Requirements
+
+-  WooCommerce 3.0+
+
+
+## Installation
+ 1. Download latest [release](https://github.com/Payop/woocommerce-plugin/releases)
+ 2. Log in to your WordPress dashboard, navigate to the Plugins menu and click "Add New" button
+ 3. Click "Upload Plugin" button and choose release archive
+ 4. Click "Install Now". 
+ 5. After plugin installed, activate the plugin in your WordPress admin area.
+ 6. Open the settings page for WooCommerce and click the "Payments" tab
+ 7. Click on the sub-item for PayOp.
+ 8. Configure and save your settings accordingly.
+
+You can issue  **Public key** and **Secret key** after register as merchant on PayOp.com.  
+
+Use below parameters to configure your PayOp project:
+* **Callback/IPN URL**: https://{replace-with-your-domain}/?wc-api=wc_payop&payop=result
 
 ## Support
 
