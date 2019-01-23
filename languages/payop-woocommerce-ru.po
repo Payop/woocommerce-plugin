@@ -4,88 +4,120 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2019-01-21 18:11+0200\n"
+"PO-Revision-Date: 2019-01-23 16:42+0200\n"
 "POT-Creation-Date: \n"
 "Language-Team: \n"
 "X-Generator: Poedit 2.0.6\n"
 "Last-Translator: \n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "Language: ru\n"
 
 msgid "PayOp"
 msgstr "PayOp"
 
-msgid "Настройка приема электронных платежей через PayOp."
-msgstr "Настройка приема электронных платежей через PayOp."
+# Настройка приема электронных платежей через PayOp.
+msgid "Take payments via PayOp"
+msgstr "Настройка приема электронных платежей через PayOp"
 
-msgid "Шлюз отключен"
+# Шлюз отключен
+msgid "Gateway is disabled"
 msgstr "Шлюз отключен"
 
-msgid "PayOp не поддерживает валюты Вашего магазина."
-msgstr "PayOp не поддерживает валюты Вашего магазина."
+# PayOp не поддерживает валюты Вашего магазина.
+msgid "PayOp does not support the currency of your store"
+msgstr "PayOp не поддерживает валюты Вашего магазина"
 
-msgid "Активность способа оплаты"
-msgstr "Активность способа оплаты"
+# Активность способа оплаты
+msgid "Enable PayOp payments"
+msgstr "Включить платежи через PayOp"
 
-msgid "Активен"
-msgstr "Активен"
+# Активен
+msgid "Enable/Disable"
+msgstr "Включить/Отключить"
 
-msgid "Название способа оплаты"
+# Название способа оплаты
+msgid "Name of payment gateway"
 msgstr "Название способа оплаты"
 
-msgid "Название способа оплаты, которое увидит пользователь при оформлении заказа"
-msgstr "Название способа оплаты, которое увидит пользователь при оформлении заказа"
+# Название способа оплаты, которое увидит пользователь при оформлении заказа
+msgid ""
+"The name of the payment gateway that the user see when placing the order"
+msgstr ""
+"Название способа оплаты, которое увидит пользователь при оформлении заказа"
 
-msgid "Публичный ключ"
+# Публичный ключ
+msgid "Public key"
 msgstr "Публичный ключ"
 
-msgid "Секретный ключ"
+# Секретный ключ
+msgid "Secret key"
 msgstr "Секретный ключ"
 
-msgid "Выдается в Личном кабинете https://payop.com"
+# Выдается в Личном кабинете https://payop.com
+msgid "Issued in the client panel https://payop.com"
 msgstr "Выдается в Личном кабинете https://payop.com"
 
-msgid "Описание способа оплаты, которое клиент будет видеть на вашем сайте."
-msgstr "Описание способа оплаты, которое клиент будет видеть на вашем сайте."
+# Описание способа оплаты, которое клиент будет видеть на вашем сайте.
+msgid ""
+"Description of the payment gateway that the client will see on your site"
+msgstr "Описание способа оплаты, которое клиент будет видеть на вашем сайте"
 
-msgid "Автозавершение заказа"
+# Автозавершение заказа
+msgid "Order completion"
 msgstr "Автозавершение заказа"
 
-msgid "Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты"
-msgstr "Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты"
+# Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты
+msgid ""
+"Automatic transfer of the order to the status \"Completed\" after successful "
+"payment"
+msgstr ""
+"Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты"
 
-msgid "Язык платежной формы"
+# Язык платежной формы
+msgid "Payment form language"
 msgstr "Язык платежной формы"
 
-msgid "Выберите язык платежной формы для Вашего магазина"
+# Выберите язык платежной формы для Вашего магазина
+msgid "Select the language of the payment form for your store"
 msgstr "Выберите язык платежной формы для Вашего магазина"
 
-msgid "Русский"
+# Русский
+msgid "Russian"
 msgstr "Русский"
 
-msgid "Английский"
+# Английский
+msgid "English"
 msgstr "Английский"
 
-msgid "Оплата заказа #"
+# Оплата заказа #
+msgid "Payment order #"
 msgstr "Оплата заказа #"
 
-msgid "Запрос к платежному сервису был отправлен некорректно"
+# Запрос к платежному сервису был отправлен некорректно
+msgid "Request to payment service was sent incorrectly"
 msgstr "Запрос к платежному сервису был отправлен некорректно"
 
-msgid "Оплатить"
+# Оплатить
+msgid "Pay"
 msgstr "Оплатить"
 
-msgid "Отказаться от оплаты & вернуться в корзину"
+# Отказаться от оплаты & вернуться в корзину
+msgid "Refuse payment & return to cart"
 msgstr "Отказаться от оплаты & вернуться в корзину"
 
-msgid "Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить."
-msgstr "Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить."
+# Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить.
+msgid "Thank you for your order, please click the button below to pay"
+msgstr "Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить"
 
-msgid "Платеж успешно оплачен"
+# Платеж успешно оплачен
+msgid "Payment successfully paid"
 msgstr "Платеж успешно оплачен"
 
-msgid "Платеж не оплачен"
+# Платеж не оплачен
+msgid "Payment not paid"
 msgstr "Платеж не оплачен"
 
-msgid "Платеж успешно завершен."
-msgstr "Платеж успешно завершен."
+# Платеж успешно завершен
+msgid "Payment completed successfully"
+msgstr "Платеж успешно завершен"
