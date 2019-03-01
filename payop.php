@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
  * Plugin Name: Payop-woocommerce-plugin
  * Plugin URI: https://payop.com/
  * Description: Проведение платежей через PayOp
- * Version: 1.0.2
+ * Version: 1.0.3
  */
 
 add_action('plugins_loaded', 'woocommerce_payop', 0);
@@ -72,7 +72,7 @@ function woocommerce_payop()
         /**
          * Check if this gateway is enabled and available in the user's country
          */
-        function is_valid_for_use()
+        public function is_valid_for_use()
         {
             return true;
         }
@@ -118,7 +118,7 @@ function woocommerce_payop()
          * @access public
          * @return void
          */
-        function init_form_fields()
+        public function init_form_fields()
         {
             global $woocommerce;
 
@@ -182,7 +182,7 @@ function woocommerce_payop()
         /**
          * Дополнительная информация в форме выбора способа оплаты
          **/
-        function payment_fields()
+        public function payment_fields()
         {
             if ($this->description) {
                 echo wpautop(wptexturize($this->description));
@@ -251,7 +251,7 @@ function woocommerce_payop()
         /**
          * Process the payment and return the result
          **/
-        function process_payment($order_id)
+        public function process_payment($order_id)
         {
             $order = new WC_Order($order_id);
 
@@ -265,7 +265,7 @@ function woocommerce_payop()
         /**
          * receipt_page
          **/
-        function receipt_page($order)
+        public function receipt_page($order)
         {
             echo '<p>'.__('Thank you for your order, please click the button below to pay', TRANS_DOMAIN).'</p>';
 
@@ -274,8 +274,12 @@ function woocommerce_payop()
 
         /**
          * Check PayOp IPN validity
-         **/
-        function check_ipn_request_is_valid($posted)
+         *
+         * @param array $posted
+         *
+         * @return bool|string
+         */
+        public function check_ipn_request_is_valid($posted)
         {
             $orderId = !empty($posted['orderId']) ? $posted['orderId'] : null;
             if (!$orderId) {
@@ -314,24 +318,36 @@ function woocommerce_payop()
         /**
          * Check Response
          **/
-        function check_ipn_response()
+        public function check_ipn_response()
         {
             global $woocommerce;
 
-            if (isset($_REQUEST['payop']) AND $_REQUEST['payop'] == 'result') {
-                @ob_clean();
+            $requestType = !empty($_GET['payop']) ? $_GET['payop'] : '';
 
-                $_REQUEST = stripslashes_deep($_REQUEST);
-
-                $valid = $this->check_ipn_request_is_valid($_REQUEST);
-                if ($valid === true) {
-                    do_action('valid-payop-standard-ipn-reques', $_REQUEST);
-                } else {
-                    wp_die($valid, $valid, 400);
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $postedData = json_decode(file_get_contents('php://input'), true);
+                if (!is_array($postedData)) {
+                    $postedData = [];
                 }
             } else {
-                if (isset($_REQUEST['payop']) AND $_REQUEST['payop'] == 'success') {
-                    $orderId = $_REQUEST['orderId'];
+                $postedData = $_GET;
+            }
+
+            switch ($requestType) {
+                case 'result':
+                    @ob_clean();
+
+                    $postedData = stripslashes_deep($postedData);
+
+                    $valid = $this->check_ipn_request_is_valid($postedData);
+                    if ($valid === true) {
+                        do_action('valid-payop-standard-ipn-reques', $postedData);
+                    } else {
+                        wp_die($valid, $valid, 400);
+                    }
+                    break;
+                case 'success':
+                    $orderId = $postedData['orderId'];
 
                     $order = new WC_Order($orderId);
 
@@ -340,26 +356,25 @@ function woocommerce_payop()
                     WC()->cart->empty_cart();
 
                     wp_redirect($this->get_return_url($order));
-                } else {
-                    if (isset($_REQUEST['payop']) AND $_REQUEST['payop'] == 'fail') {
-                        $orderId = $_REQUEST['orderId'];
+                    break;
+                case 'fail':
+                    $orderId = $postedData['orderId'];
 
-                        $order = new WC_Order($orderId);
+                    $order = new WC_Order($orderId);
 
-                        $order->update_status('failed', __('Payment not paid', TRANS_DOMAIN));
+                    $order->update_status('failed', __('Payment not paid', TRANS_DOMAIN));
 
-                        wp_redirect($order->get_cancel_order_url());
-
-                        exit;
-                    }
-                }
+                    wp_redirect($order->get_cancel_order_url());
+                    break;
             }
+
+            wp_die('Invalid IPN request', 'Invalid IPN request', 400);
         }
 
         /**
          * Successful Payment!
          **/
-        function successful_request($posted)
+        public  function successful_request($posted)
         {
             global $woocommerce;
 
@@ -380,7 +395,7 @@ function woocommerce_payop()
             exit;
         }
 
-        function apiRequest($arrData = [])
+        public  function apiRequest($arrData = [])
         {
             $data = json_encode($arrData);
 
