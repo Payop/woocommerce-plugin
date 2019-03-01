@@ -228,9 +228,9 @@ function woocommerce_payop()
 
             $arrData['language'] = $this->language;
 
-            $arrData['resultUrl'] = get_site_url().'/?wc-api=wc_payop&payop=success';
+            $arrData['resultUrl'] = get_site_url()."/?wc-api=wc_payop&payop=success&orderId={$order_id}";
 
-            $arrData['failUrl'] = get_site_url().'/?wc-api=wc_payop&payop=fail';
+            $arrData['failUrl'] = get_site_url()."/?wc-api=wc_payop&payop=fail&orderId={$order_id}";
 
             $response = $this->apiRequest($arrData);
 
@@ -364,7 +364,7 @@ function woocommerce_payop()
 
                     $order->update_status('failed', __('Payment not paid', TRANS_DOMAIN));
 
-                    wp_redirect($order->get_cancel_order_url());
+                    wp_redirect($order->get_cancel_order_url_raw());
                     break;
                 default:
                     wp_die('Invalid request', 'Invalid request', 400);
