@@ -366,9 +366,9 @@ function woocommerce_payop()
 
                     wp_redirect($order->get_cancel_order_url());
                     break;
+                default:
+                    wp_die('Invalid request', 'Invalid request', 400);
             }
-
-            wp_die('Invalid IPN request', 'Invalid IPN request', 400);
         }
 
         /**
