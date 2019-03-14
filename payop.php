@@ -1,23 +1,25 @@
 <?php
+/*
+Plugin Name: Payop
+Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
+Description: PayOp: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
+Author URI: https://payop.com/
+Version: 1.0.4
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Domain Path: /languages
+*/
+
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-/**
- * Plugin Name: Payop-woocommerce-plugin
- * Plugin URI: https://payop.com/
- * Description: Проведение платежей через PayOp
- * Version: 1.0.3
- */
-
 add_action('plugins_loaded', 'woocommerce_payop', 0);
-
-const TRANS_DOMAIN = 'payop-woocommerce';
 
 function woocommerce_payop()
 {
-    load_plugin_textdomain(TRANS_DOMAIN, false, plugin_basename(dirname(__FILE__)).'/languages');
+    load_plugin_textdomain('payop-woocommerce', false, plugin_basename(dirname(__FILE__)) . '/languages');
 
     if (!class_exists('WC_Payment_Gateway')) {
         return;
@@ -38,7 +40,7 @@ function woocommerce_payop()
 
             $this->id = 'payop';
 
-            $this->icon = apply_filters('woocommerce_payop_icon', ''.$plugin_dir.'payop.png');
+            $this->icon = apply_filters('woocommerce_payop_icon', '' . $plugin_dir . 'payop.png');
             // Load the settings
             $this->init_form_fields();
             $this->init_settings();
@@ -56,10 +58,10 @@ function woocommerce_payop()
 
             // Actions
             add_action('valid-payop-standard-ipn-reques', [$this, 'successful_request']);
-            add_action('woocommerce_receipt_'.$this->id, [$this, 'receipt_page']);
+            add_action('woocommerce_receipt_' . $this->id, [$this, 'receipt_page']);
 
             // Payment listener/API hook
-            add_action('woocommerce_api_wc_'.$this->id, [$this, 'check_ipn_response']);
+            add_action('woocommerce_api_wc_' . $this->id, [$this, 'check_ipn_response']);
 
             // Save options
             add_action('woocommerce_update_options_payment_gateways_payop', [$this, 'process_admin_options']);
@@ -88,8 +90,8 @@ function woocommerce_payop()
             global $woocommerce;
 
             ?>
-            <h3><?php _e('PayOp', TRANS_DOMAIN); ?></h3>
-            <p><?php _e('Take payments via PayOp.', TRANS_DOMAIN); ?></p>
+            <h3><?php _e('PayOp', 'payop-woocommerce'); ?></h3>
+            <p><?php _e('Take payments via PayOp.', 'payop-woocommerce'); ?></p>
 
             <?php if ($this->is_valid_for_use()) : ?>
 
@@ -103,8 +105,8 @@ function woocommerce_payop()
         <?php else : ?>
             <div class="inline error">
                 <p>
-                    <strong><?php _e('Gateway is disabled', TRANS_DOMAIN); ?></strong>:
-                    <?php _e('PayOp does not support the currency of your store.', TRANS_DOMAIN); ?>
+                    <strong><?php _e('Gateway is disabled', 'payop-woocommerce'); ?></strong>:
+                    <?php _e('PayOp does not support the currency of your store.', 'payop-woocommerce'); ?>
                 </p>
             </div>
         <?php
@@ -123,57 +125,57 @@ function woocommerce_payop()
             global $woocommerce;
 
             $this->form_fields = [
-                'enabled'               => [
-                    'title'   => __('Enable PayOp payments', TRANS_DOMAIN),
-                    'type'    => 'checkbox',
-                    'label'   => __('Enable/Disable', TRANS_DOMAIN),
+                'enabled' => [
+                    'title' => __('Enable PayOp payments', 'payop-woocommerce'),
+                    'type' => 'checkbox',
+                    'label' => __('Enable/Disable', 'payop-woocommerce'),
                     'default' => 'yes',
                 ],
-                'title'                 => [
-                    'title'       => __('Name of payment gateway', TRANS_DOMAIN),
-                    'type'        => 'text',
-                    'description' => __('The name of the payment gateway that the user see when placing the order', TRANS_DOMAIN),
-                    'default'     => __('PayOp', TRANS_DOMAIN),
+                'title' => [
+                    'title' => __('Name of payment gateway', 'payop-woocommerce'),
+                    'type' => 'text',
+                    'description' => __('The name of the payment gateway that the user see when placing the order', 'payop-woocommerce'),
+                    'default' => __('PayOp', 'payop-woocommerce'),
                 ],
-                'public_key'            => [
-                    'title'       => __('Public key', TRANS_DOMAIN),
-                    'type'        => 'text',
-                    'description' => __('Issued in the client panel https://payop.com', TRANS_DOMAIN),
-                    'default'     => '',
+                'public_key' => [
+                    'title' => __('Public key', 'payop-woocommerce'),
+                    'type' => 'text',
+                    'description' => __('Issued in the client panel https://payop.com', 'payop-woocommerce'),
+                    'default' => '',
                 ],
-                'secret_key'            => [
-                    'title'       => __('Secret key', TRANS_DOMAIN),
-                    'type'        => 'text',
-                    'description' => __('Issued in the client panel https://payop.com', TRANS_DOMAIN),
-                    'default'     => '',
+                'secret_key' => [
+                    'title' => __('Secret key', 'payop-woocommerce'),
+                    'type' => 'text',
+                    'description' => __('Issued in the client panel https://payop.com', 'payop-woocommerce'),
+                    'default' => '',
                 ],
-                'description'           => [
-                    'title'       => __('Description', TRANS_DOMAIN),
-                    'type'        => 'textarea',
+                'description' => [
+                    'title' => __('Description', 'payop-woocommerce'),
+                    'type' => 'textarea',
                     'description' => __(
                         'Description of the payment gateway that the client will see on your site.',
-                        TRANS_DOMAIN
+                        'payop-woocommerce'
                     ),
-                    'default'     => __('Accept online payments using PayOp.com', TRANS_DOMAIN),
+                    'default' => __('Accept online payments using PayOp.com', 'payop-woocommerce'),
                 ],
-                'auto_complete'         => [
-                    'title'       => __('Order completion', TRANS_DOMAIN),
-                    'type'        => 'checkbox',
-                    'label'       => __(
+                'auto_complete' => [
+                    'title' => __('Order completion', 'payop-woocommerce'),
+                    'type' => 'checkbox',
+                    'label' => __(
                         'Automatic transfer of the order to the status "Completed" after successful payment',
-                        TRANS_DOMAIN
+                        'payop-woocommerce'
                     ),
-                    'description' => __('', TRANS_DOMAIN),
-                    'default'     => '1',
+                    'description' => __('', 'payop-woocommerce'),
+                    'default' => '1',
                 ],
                 'payment_form_language' => [
-                    'title'       => __('Payment form language', TRANS_DOMAIN),
-                    'type'        => 'select',
-                    'description' => __('Select the language of the payment form for your store', TRANS_DOMAIN),
-                    'default'     => 'en',
-                    'options'     => [
-                        'en' => __('English', TRANS_DOMAIN),
-                        'ru' => __('Russian', TRANS_DOMAIN),
+                    'title' => __('Payment form language', 'payop-woocommerce'),
+                    'type' => 'select',
+                    'description' => __('Select the language of the payment form for your store', 'payop-woocommerce'),
+                    'default' => 'en',
+                    'options' => [
+                        'en' => __('English', 'payop-woocommerce'),
+                        'ru' => __('Russian', 'payop-woocommerce'),
                     ],
                 ],
             ];
@@ -222,29 +224,29 @@ function woocommerce_payop()
 
             $arrData['signature'] = hash('sha256', implode(':', $dataSet));
 
-            $arrData['order']['description'] = __('Payment order #', TRANS_DOMAIN).$order_id;
+            $arrData['order']['description'] = __('Payment order #', 'payop-woocommerce') . $order_id;
 
             $arrData['customer']['email'] = $order->get_billing_email();
 
             $arrData['language'] = $this->language;
 
-            $arrData['resultUrl'] = get_site_url()."/?wc-api=wc_payop&payop=success&orderId={$order_id}";
+            $arrData['resultUrl'] = get_site_url() . "/?wc-api=wc_payop&payop=success&orderId={$order_id}";
 
-            $arrData['failUrl'] = get_site_url()."/?wc-api=wc_payop&payop=fail&orderId={$order_id}";
+            $arrData['failUrl'] = get_site_url() . "/?wc-api=wc_payop&payop=fail&orderId={$order_id}";
 
             $response = $this->apiRequest($arrData);
 
             if ((isset($response['errors']) and count($response['errors'])) or !isset($response['data']['redirectUrl'])) {
-                return '<p>'.__('Request to payment service was sent incorrectly', TRANS_DOMAIN).'</p>';
+                return '<p>' . __('Request to payment service was sent incorrectly', 'payop-woocommerce') . '</p>';
             }
 
             $action_adr = $response['data']['redirectUrl'];
 
             $args_array = [];
 
-            return '<form action="'.esc_url($action_adr).'" method="GET" id="payop_payment_form">'."\n".
-                implode("\n", $args_array).
-                '<input type="submit" class="button alt" id="submit_payop_payment_form" value="'.__('Pay', TRANS_DOMAIN).'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Refuse payment & return to cart', TRANS_DOMAIN).'</a>'."\n".
+            return '<form action="' . esc_url($action_adr) . '" method="GET" id="payop_payment_form">' . "\n" .
+                implode("\n", $args_array) .
+                '<input type="submit" class="button alt" id="submit_payop_payment_form" value="' . __('Pay', 'payop-woocommerce') . '" /> <a class="button cancel" href="' . $order->get_cancel_order_url() . '">' . __('Refuse payment & return to cart', 'payop-woocommerce') . '</a>' . "\n" .
                 '</form>';
         }
 
@@ -256,7 +258,7 @@ function woocommerce_payop()
             $order = new WC_Order($order_id);
 
             return [
-                'result'   => 'success',
+                'result' => 'success',
                 'redirect' => add_query_arg('order', $order->id,
                     add_query_arg('key', $order->order_key, get_permalink(wc_get_page_id('pay')))),
             ];
@@ -267,7 +269,7 @@ function woocommerce_payop()
          **/
         public function receipt_page($order)
         {
-            echo '<p>'.__('Thank you for your order, please click the button below to pay', TRANS_DOMAIN).'</p>';
+            echo '<p>' . __('Thank you for your order, please click the button below to pay', 'payop-woocommerce') . '</p>';
 
             echo $this->generate_form($order);
         }
@@ -351,7 +353,7 @@ function woocommerce_payop()
 
                     $order = new WC_Order($orderId);
 
-                    $order->update_status('processing', __('Payment successfully paid', TRANS_DOMAIN));
+                    $order->update_status('processing', __('Payment successfully paid', 'payop-woocommerce'));
 
                     WC()->cart->empty_cart();
 
@@ -362,7 +364,7 @@ function woocommerce_payop()
 
                     $order = new WC_Order($orderId);
 
-                    $order->update_status('failed', __('Payment not paid', TRANS_DOMAIN));
+                    $order->update_status('failed', __('Payment not paid', 'payop-woocommerce'));
 
                     wp_redirect($order->get_cancel_order_url_raw());
                     break;
@@ -374,7 +376,7 @@ function woocommerce_payop()
         /**
          * Successful Payment!
          **/
-        public  function successful_request($posted)
+        public function successful_request($posted)
         {
             global $woocommerce;
 
@@ -388,34 +390,30 @@ function woocommerce_payop()
             }
 
             // Payment completed
-            $order->add_order_note(__('Payment completed successfully', TRANS_DOMAIN));
+            $order->add_order_note(__('Payment completed successfully', 'payop-woocommerce'));
 
             $order->payment_complete();
 
             exit;
         }
 
-        public  function apiRequest($arrData = [])
+        public function apiRequest($arrData = [])
         {
-            $data = json_encode($arrData);
+            $request_url = $this->apiUrl;
 
-            $ch = curl_init($this->apiUrl);
+            $args = array(
+                'sslverify' => false,
+                'headers' => array(
+                    'Content-Type' => 'application/json'
+                ),
+                'body' => json_encode($arrData),
+            );
 
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            $response = wp_remote_post($request_url, $args);
 
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type:application/json']);
+            $response = wp_remote_retrieve_body($response);
 
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-            $result = curl_exec($ch);
-
-            curl_close($ch);
-
-            return json_decode($result, true);
+            return json_decode($response, true);
         }
     }
 
