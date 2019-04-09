@@ -4,7 +4,7 @@ Plugin Name: Payop
 Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
 Description: PayOp: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
 Author URI: https://payop.com/
-Version: 1.0.4
+Version: 1.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
@@ -294,8 +294,8 @@ function woocommerce_payop()
 
             $status = $posted['status'];
 
-            if ($status !== 'success') {
-                return 'status is not success';
+            if ($status !== 'success' && $status !== 'error') {
+                return 'status is not valid';
             }
 
             $o = ['id' => $orderId, 'amount' => $amount, 'currency' => $currency];
@@ -340,9 +340,21 @@ function woocommerce_payop()
                     @ob_clean();
 
                     $postedData = stripslashes_deep($postedData);
+                    if ($postedData['status'] === 'wait') {
+                        wp_die('Status wait', 'Status wait', 200);
+                    }
+                    $orderId = $postedData['orderId'];
+                    $order = new WC_Order($orderId);
 
                     $valid = $this->check_ipn_request_is_valid($postedData);
                     if ($valid === true) {
+                        if ($postedData['status'] === 'success') {
+                            $order->update_status('processing', __('Payment successfully paid', 'payop-woocommerce'));
+                            wp_die('Status success', 'Status success', 200);
+                        } elseif ($postedData['status'] === 'error') {
+                            $order->update_status('failed', __('Payment not paid', 'payop-woocommerce'));
+                            wp_die('Status fail', 'Status fail', 200);
+                        }
                         do_action('valid-payop-standard-ipn-reques', $postedData);
                     } else {
                         wp_die($valid, $valid, 400);
