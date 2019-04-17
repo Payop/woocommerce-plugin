@@ -3,7 +3,7 @@ Tags: credit cards, payment methods, payop, payment gateway
 Requires at least: 5.0
 Tested up to: 5.1.1
 Requires PHP: 5.4.45
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,3 +79,6 @@ Use below parameters to configure your PayOp project:
 
 = 1.0.5 =
 * Update callback response.
+
+= 1.0.6 =
+* Add multi-currency
