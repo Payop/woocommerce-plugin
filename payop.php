@@ -4,7 +4,7 @@ Plugin Name: Payop
 Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
 Description: PayOp: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
 Author URI: https://payop.com/
-Version: 1.0.6
+Version: 1.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
@@ -17,6 +17,9 @@ if (!defined('ABSPATH')) {
 
 add_action('plugins_loaded', 'woocommerce_payop', 0);
 
+/**
+ *
+ */
 function woocommerce_payop()
 {
     load_plugin_textdomain('payop-woocommerce', false, plugin_basename(dirname(__FILE__)) . '/languages');
@@ -49,7 +52,10 @@ function woocommerce_payop()
             $this->title = $this->get_option('title');
             $this->public_key = $this->get_option('public_key');
             $this->secret_key = $this->get_option('secret_key');
+            $this->skip_confirm = $this->get_option('skip_confirm');
             $this->lifetime = $this->get_option('lifetime');
+            $this->payment_group = $this->get_option('payment_group');
+            $this->payment_method = $this->get_option('payment_method');
             $this->language = $this->get_option('payment_form_language');
             $this->testmode = $this->get_option('testmode');
 
@@ -120,36 +126,38 @@ function woocommerce_payop()
          * @access public
          * @return void
          */
+
         public function init_form_fields()
         {
+
             global $woocommerce;
 
-            $this->form_fields = [
-                'enabled' => [
+            $this->form_fields = array(
+                'enabled' => array(
                     'title' => __('Enable PayOp payments', 'payop-woocommerce'),
                     'type' => 'checkbox',
                     'label' => __('Enable/Disable', 'payop-woocommerce'),
                     'default' => 'yes',
-                ],
-                'title' => [
+                ),
+                'title' => array(
                     'title' => __('Name of payment gateway', 'payop-woocommerce'),
                     'type' => 'text',
                     'description' => __('The name of the payment gateway that the user see when placing the order', 'payop-woocommerce'),
                     'default' => __('PayOp', 'payop-woocommerce'),
-                ],
-                'public_key' => [
+                ),
+                'public_key' => array(
                     'title' => __('Public key', 'payop-woocommerce'),
                     'type' => 'text',
                     'description' => __('Issued in the client panel https://payop.com', 'payop-woocommerce'),
                     'default' => '',
-                ],
-                'secret_key' => [
+                ),
+                'secret_key' => array(
                     'title' => __('Secret key', 'payop-woocommerce'),
                     'type' => 'text',
                     'description' => __('Issued in the client panel https://payop.com', 'payop-woocommerce'),
                     'default' => '',
-                ],
-                'description' => [
+                ),
+                'description' => array(
                     'title' => __('Description', 'payop-woocommerce'),
                     'type' => 'textarea',
                     'description' => __(
@@ -157,8 +165,8 @@ function woocommerce_payop()
                         'payop-woocommerce'
                     ),
                     'default' => __('Accept online payments using PayOp.com', 'payop-woocommerce'),
-                ],
-                'auto_complete' => [
+                ),
+                'auto_complete' => array(
                     'title' => __('Order completion', 'payop-woocommerce'),
                     'type' => 'checkbox',
                     'label' => __(
@@ -167,18 +175,54 @@ function woocommerce_payop()
                     ),
                     'description' => __('', 'payop-woocommerce'),
                     'default' => '1',
-                ],
-                'payment_form_language' => [
+                ),
+                'skip_confirm' => array(
+                    'title' => __('Skip confirmation', 'payop-woocommerce'),
+                    'type' => 'checkbox',
+                    'label' => __(
+                        'Skip page checkout confirmation',
+                        'payop-woocommerce'
+                    ),
+                    'description' => __('', 'payop-woocommerce'),
+                    'default' => 'yes',
+                ),
+                'payment_form_language' => array(
                     'title' => __('Payment form language', 'payop-woocommerce'),
                     'type' => 'select',
                     'description' => __('Select the language of the payment form for your store', 'payop-woocommerce'),
                     'default' => 'en',
-                    'options' => [
+                    'options' => array(
                         'en' => __('English', 'payop-woocommerce'),
                         'ru' => __('Russian', 'payop-woocommerce'),
-                    ],
-                ],
-            ];
+                    ),
+                ),
+                'payment_group' => array(
+                    'title' => __('Payment method group', 'payop-woocommerce'),
+                    'type' => 'select',
+                    'description' => __('Select default payment method group', 'payop-woocommerce'),
+                    'default' => 'en',
+                    'options' => array(
+                        'all' => __('All', 'payop-woocommerce'),
+                        'bank_transfer' => __('Bank Transfer', 'payop-woocommerce'),
+                        'cards_international' => __('Cards International', 'payop-woocommerce'),
+                        'cards_local' => __('Cards Local', 'payop-woocommerce'),
+                        'cash' => __('Cash', 'payop-woocommerce'),
+                        'crypto' => __('Crypto', 'payop-woocommerce'),
+                        'ewallet' => __('Ewallet', 'payop-woocommerce'),
+                        'internet_banking' => __('Internet Banking', 'payop-woocommerce'),
+                        'mobile_operator' => __('Mobile Operator', 'payop-woocommerce'),
+                        'prepayment' => __('Prepayment', 'payop-woocommerce')
+                    ),
+                ),
+                'payment_method' => array(
+                    'title' => __('Directpay payment method', 'wcs'),
+                    'type' => 'select',
+                    'description' => __('Select default payment method to directpay.', 'payop-woocommerce'),
+                    'id' => 'wcs_chosen_categories',
+                    'default' => '',
+                    'options' => $this->get_payments_methods_options(true),
+                ),
+            );
         }
 
         /**
@@ -192,15 +236,76 @@ function woocommerce_payop()
         }
 
         /**
+         * Select payment methods
+         **/
+        private function get_payments_methods_options( $default )
+        {
+            $request_url = 'https://payop.com/api/v1.1/merchant/payment-method';
+
+            if ($default) {
+                $methodOptions = array('none' => __('None direct pay', 'woocommerce'));
+            }
+
+            $arrData['publicKey'] = $this->get_option('public_key');
+
+            $dataSet = \array_values($arrData);
+
+            \array_push($dataSet, $this->get_option('secret_key'));
+
+            $arrData['signature'] = \hash('sha256', \implode(':', $dataSet));
+
+            $args = array(
+                'timeout' => 10,
+                'sslverify' => false,
+                'headers' => array(
+                    'Content-Type' => 'application/json'
+                ),
+                'body' => json_encode($arrData),
+            );
+
+            $response = get_transient('paymentMethodOptions');
+            if (false === $response) {
+                $response = wp_remote_post($request_url, $args);
+                $response = wp_remote_retrieve_body($response);
+                set_transient('paymentMethodOptions', $response, 300);
+            }
+
+            $response = json_decode($response, true);
+            foreach ($response['data']['items'] as $item) {
+                if ($default) {
+                    $methodOptions[$item['pm_id']] = __($item['title'], 'woocommerce');
+                } else {
+                    $methodOptions[] = $item['pm_id'];
+                }
+            }
+            return $methodOptions;
+
+        }
+
+        /**
          * Generate the dibs button link
          **/
-        public function generate_form($order_id)
+        public function generate_form( $order_id )
         {
             global $woocommerce;
 
             $order = new WC_Order($order_id);
 
             $out_summ = number_format($order->order_total, 4, '.', '');
+
+            $paymentGroup = [
+                'cards_local',
+                'cards_international',
+                'ewallet',
+                'bank_transfer',
+                'prepayment',
+                'cash',
+                'mobile_operator',
+                'internet_banking',
+                'crypto'
+            ];
+
+            $paymentMethods = $this->get_payments_methods_options(false);
 
             $arrData = [];
 
@@ -224,9 +329,22 @@ function woocommerce_payop()
 
             $arrData['signature'] = hash('sha256', implode(':', $dataSet));
 
+            if (in_array($this->payment_group, $paymentGroup)) {
+                $arrData['paymentGroup'] = $this->payment_group;
+            }
+
+            if (in_array($this->payment_method, $paymentMethods)) {
+                $arrData['paymentMethod'] = $this->payment_method;
+
+            }
+
             $arrData['order']['description'] = __('Payment order #', 'payop-woocommerce') . $order_id;
 
             $arrData['customer']['email'] = $order->get_billing_email();
+
+            if ($order->get_billing_phone()) {
+                $arrData['customer']['phone'] = $order->get_billing_phone();
+            }
 
             $arrData['language'] = $this->language;
 
@@ -242,6 +360,11 @@ function woocommerce_payop()
 
             $action_adr = $response['data']['redirectUrl'];
 
+            if ($this->skip_confirm === "yes") {
+                wp_redirect(esc_url($action_adr));
+                exit;
+            }
+
             $args_array = [];
 
             return '<form action="' . esc_url($action_adr) . '" method="GET" id="payop_payment_form">' . "\n" .
@@ -253,7 +376,7 @@ function woocommerce_payop()
         /**
          * Process the payment and return the result
          **/
-        public function process_payment($order_id)
+        public function process_payment( $order_id )
         {
             $order = new WC_Order($order_id);
 
@@ -267,7 +390,7 @@ function woocommerce_payop()
         /**
          * receipt_page
          **/
-        public function receipt_page($order)
+        public function receipt_page( $order )
         {
             echo '<p>' . __('Thank you for your order, please click the button below to pay', 'payop-woocommerce') . '</p>';
 
@@ -281,7 +404,7 @@ function woocommerce_payop()
          *
          * @return bool|string
          */
-        public function check_ipn_request_is_valid($posted)
+        public function check_ipn_request_is_valid( $posted )
         {
             $orderId = !empty($posted['orderId']) ? $posted['orderId'] : null;
             if (!$orderId) {
@@ -388,7 +511,7 @@ function woocommerce_payop()
         /**
          * Successful Payment!
          **/
-        public function successful_request($posted)
+        public function successful_request( $posted )
         {
             global $woocommerce;
 
@@ -409,12 +532,14 @@ function woocommerce_payop()
             exit;
         }
 
-        public function apiRequest($arrData = [])
+        public function apiRequest( $arrData = [] )
         {
+
             $request_url = $this->apiUrl;
 
             $args = array(
                 'sslverify' => false,
+                'timeout' => 45,
                 'headers' => array(
                     'Content-Type' => 'application/json'
                 ),
@@ -432,14 +557,27 @@ function woocommerce_payop()
     /**
      * Add the gateway to WooCommerce
      **/
-    function add_payop_gateway($methods)
+    function add_payop_gateway( $methods )
     {
         $methods[] = 'WC_Payop';
 
         return $methods;
     }
 
+
     add_filter('woocommerce_payment_gateways', 'add_payop_gateway');
+
+    /**
+     * Add settings button in plugin area
+     **/
+    add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'add_plugin_page_settings_link');
+    function add_plugin_page_settings_link( $links )
+    {
+        $links[] = '<a href="' .
+            admin_url('admin.php?page=wc-settings&tab=checkout&section=payop') .
+            '">' . __('Settings') . '</a>';
+        return $links;
+    }
 }
 
 ?>

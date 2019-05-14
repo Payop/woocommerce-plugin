@@ -82,3 +82,10 @@ Use below parameters to configure your PayOp project:
 
 = 1.0.6 =
 * Add multi-currency
+
+= 1.0.7 =
+* Add setting button in plugin area
+* Add skip checkout page option
+* Add select default payment group
+* Add select directpay payment method
+* Add caching for payment methods
