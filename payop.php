@@ -579,5 +579,4 @@ function woocommerce_payop()
         return $links;
     }
 }
-
 ?>
