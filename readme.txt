@@ -1,9 +1,9 @@
 === PayOp Official ===
 Tags: credit cards, payment methods, payop, payment gateway
 Requires at least: 5.0
-Tested up to: 5.1.1
+Tested up to: 5.2
 Requires PHP: 5.4.45
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -82,3 +82,10 @@ Use below parameters to configure your PayOp project:
 
 = 1.0.6 =
 * Add multi-currency
+
+= 1.0.7 =
+* Add setting button in plugin area
+* Add skip checkout page option
+* Add select default payment group
+* Add select directpay payment method
+* Add caching for payment methods
