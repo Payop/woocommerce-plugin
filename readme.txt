@@ -89,3 +89,6 @@ Use below parameters to configure your PayOp project:
 * Add select default payment group
 * Add select directpay payment method
 * Add caching for payment methods
+
+= 1.0.8 =
+* Fix payment methods error
