@@ -263,19 +263,17 @@ function woocommerce_payop()
                 'body' => json_encode($arrData),
             );
 
-            $response = get_transient('paymentMethodOptions');
-            if (false === $response) {
-                $response = wp_remote_post($request_url, $args);
-                $response = wp_remote_retrieve_body($response);
-                set_transient('paymentMethodOptions', $response, 300);
-            }
-
+            $response = wp_remote_post($request_url, $args);
+            $response = wp_remote_retrieve_body($response);
             $response = json_decode($response, true);
-            foreach ($response['data']['items'] as $item) {
-                if ($default) {
-                    $methodOptions[$item['pm_id']] = __($item['title'], 'woocommerce');
-                } else {
-                    $methodOptions[] = $item['pm_id'];
+
+            if ($response['data']['items']) {
+                foreach ($response['data']['items'] as $item) {
+                    if ($default) {
+                        $methodOptions[$item['pm_id']] = __($item['title'], 'woocommerce');
+                    } else {
+                        $methodOptions[] = $item['pm_id'];
+                    }
                 }
             }
             return $methodOptions;
@@ -333,7 +331,7 @@ function woocommerce_payop()
                 $arrData['paymentGroup'] = $this->payment_group;
             }
 
-            if (in_array($this->payment_method, $paymentMethods)) {
+            if ($paymentMethods && in_array($this->payment_method, $paymentMethods)) {
                 $arrData['paymentMethod'] = $this->payment_method;
 
             }
