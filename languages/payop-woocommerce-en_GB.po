@@ -40,10 +40,8 @@ msgid "Name of payment gateway"
 msgstr "Name of payment gateway"
 
 # Название способа оплаты, которое увидит пользователь при оформлении заказа
-msgid ""
-"The name of the payment gateway that the user see when placing the order"
-msgstr ""
-"The name of the payment gateway that the user see when placing the order"
+msgid "The name of the payment gateway that the user see when placing the order"
+msgstr "The name of the payment gateway that the user see when placing the order"
 
 # Публичный ключ
 msgid "Public key"
@@ -53,27 +51,29 @@ msgstr "Public key"
 msgid "Secret key"
 msgstr "Secret key"
 
+# JWT Token
+msgid "JWT Token"
+msgstr "JWT Token"
+
+# Требуется для Directpay! Выдается в личном кабинете https://payop.com/en/profile/settings/jwt-token
+msgid "Required for Directpay! Issued in the client panel https://payop.com/en/profile/settings/jwt-token"
+msgstr "Required for Directpay! Issued in the client panel https://payop.com/en/profile/settings/jwt-token"
+
 # Выдается в Личном кабинете https://payop.com
 msgid "Issued in the client panel https://payop.com"
 msgstr "Issued in the client panel https://payop.com"
 
 # Описание способа оплаты, которое клиент будет видеть на вашем сайте.
-msgid ""
-"Description of the payment gateway that the client will see on your site"
-msgstr ""
-"Description of the payment gateway that the client will see on your site"
+msgid "Description of the payment gateway that the client will see on your site"
+msgstr "Description of the payment gateway that the client will see on your site"
 
 # Автозавершение заказа
 msgid "Order completion"
 msgstr "Order completion"
 
 # Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты
-msgid ""
-"Automatic transfer of the order to the status \"Completed\" after successful "
-"payment"
-msgstr ""
-"Automatic transfer of the order to the status \"Completed\" after successful "
-"payment"
+msgid "Automatic transfer of the order to the status \"Completed\" after successful payment"
+msgstr "Automatic transfer of the order to the status \"Completed\" after successful payment"
 
 # Язык платежной формы
 msgid "Payment form language"

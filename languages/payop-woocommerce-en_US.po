@@ -53,6 +53,14 @@ msgstr "Public key"
 msgid "Secret key"
 msgstr "Secret key"
 
+# JWT Token
+msgid "JWT Token"
+msgstr "JWT Token"
+
+# Требуется для Directpay! Выдается в личном кабинете https://payop.com/en/profile/settings/jwt-token
+msgid "Required for Directpay! Issued in the client panel https://payop.com/en/profile/settings/jwt-token"
+msgstr "Required for Directpay! Issued in the client panel https://payop.com/en/profile/settings/jwt-token"
+
 # Выдается в Личном кабинете https://payop.com
 msgid "Issued in the client panel https://payop.com"
 msgstr "Issued in the client panel https://payop.com"

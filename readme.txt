@@ -1,9 +1,9 @@
-=== PayOp Official ===
+﻿=== PayOp Official ===
 Tags: credit cards, payment methods, payop, payment gateway
 Requires at least: 5.0
-Tested up to: 5.2
+Tested up to: 5.3
 Requires PHP: 5.4.45
-Stable tag: 1.0.7
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,7 +32,7 @@ Note: WooCommerce 3.0+ must be installed for this plugin to work.
 6. Click on the sub-item for PayOp.
 7. Configure and save your settings accordingly.
 
-You can issue  **Public key** and **Secret key** after register as merchant on PayOp.com.
+You can issue  **Public key**, **Secret key** and **JWT Token** after register as merchant on PayOp.com.
 
 Use below parameters to configure your PayOp project:
 * **Callback/IPN URL**: https://{replace-with-your-domain}/?wc-api=wc_payop&payop=result
@@ -92,3 +92,28 @@ Use below parameters to configure your PayOp project:
 
 = 1.0.8 =
 * Fix payment methods error
+
+= 1.0.9 =
+* Small fix
+
+= 1.0.10 =
+* Temporarily removed the option "Payment method group"
+* Small fixes
+
+= 1.0.11 =
+* Bug fixes
+
+= 2.0 =
+* Add new API support
+* Add JWT Token in settings area
+* Add changes related to WooCommerce API update
+
+= 2.0.1 =
+* Directpay quickfix
+
+= 2.0.2 =
+* Remove warning 'Undefined index data' message
+* Add empty JWT token check
+
+= 2.0.3 =
+* Checkout bugfix
