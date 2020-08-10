@@ -230,7 +230,8 @@ The unavailability of the payment method or not all submitted fields can make pa
          **/
         private function get_payments_methods_options( $default )
         {
-            $request_url = 'https://payop.com/v1/instrument-settings/payment-methods/available-for-user';
+            $public_key = $this->get_option('public_key');
+            $request_url = 'https://payop.com/v1/instrument-settings/payment-methods/available-for-application/'. str_replace('application-', '', $public_key);
 
             if ($default) {
                 $methodOptions = array('none' => __('None direct pay', 'woocommerce'));
