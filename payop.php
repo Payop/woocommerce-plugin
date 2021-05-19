@@ -306,9 +306,9 @@ The unavailability of the payment method or not all submitted fields can make pa
 
             $arrData['language'] = $this->language;
 
-            $arrData['resultUrl'] = get_site_url() . "/?wc-api=wc_payop&payop=success&orderId={$order_id}";
+            $arrData['resultUrl'] = apply_filters('payop_success_url_args', get_site_url() . "/?wc-api=wc_payop&payop=success&orderId={$order_id}");
 
-            $arrData['failPath'] = get_site_url() . "/?wc-api=wc_payop&payop=fail&orderId={$order_id}";
+            $arrData['failPath'] = apply_filters('payop_failure_url_args', get_site_url() . "/?wc-api=wc_payop&payop=fail&orderId={$order_id}");
 
             $response = $this->apiRequest($arrData, 'identifier');
             if(isset($response['messages'])) {
@@ -451,12 +451,12 @@ The unavailability of the payment method or not all submitted fields can make pa
                             } else {
                                 $order->update_status('processing', __('Payment successfully paid', 'payop-woocommerce'));
                             }
+                            do_action('payop-ipn-request', $postedData);
                             wp_die('Status success', 'Status success', 200);
                         } elseif ($postedData['transaction']['state'] === 3 or $postedData['transaction']['state'] === 5) {
                             $order->update_status('failed', __('Payment not paid', 'payop-woocommerce'));
                             wp_die('Status fail', 'Status fail', 200);
                         }
-                        do_action('payop-ipn-request', $postedData);
                     } elseif ($valid = 'V1') {
                         if ($postedData['status'] === 'wait') {
                             wp_die('Status wait', 'Status wait', 200);
@@ -470,12 +470,12 @@ The unavailability of the payment method or not all submitted fields can make pa
                             } else {
                                 $order->update_status('processing', __('Payment successfully paid', 'payop-woocommerce'));
                             }
+                            do_action('payop-ipn-request', $postedData);
                             wp_die('Status success', 'Status success', 200);
                         } elseif ($postedData['status'] === 'error') {
                             $order->update_status('failed', __('Payment not paid', 'payop-woocommerce'));
                             wp_die('Status fail', 'Status fail', 200);
                         }
-                        do_action('payop-ipn-request', $postedData);
                     } else {
                         wp_die($valid, $valid, 400);
                     }
@@ -568,6 +568,15 @@ The unavailability of the payment method or not all submitted fields can make pa
             admin_url('admin.php?page=wc-settings&tab=checkout&section=payop') .
             '">' . __('Settings') . '</a>';
         return $links;
+    }
+
+    // init payop_*_url_args filters
+    add_filter('payop_success_url_args', 'add_payop_additional_url_args', 10, 1);
+    add_filter('payop_failure_url_args', 'add_payop_additional_url_args', 10, 1);
+
+    function add_payop_additional_url_args($url) {
+        // nothing to do by default
+        return $url;
     }
 
 }
