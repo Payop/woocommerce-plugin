@@ -117,3 +117,6 @@ Use below parameters to configure your PayOp project:
 
 = 2.0.3 =
 * Checkout bugfix
+
+= 2.0.4 =
+* Disallow override of page "order-received" by other plugins
