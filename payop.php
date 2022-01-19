@@ -334,6 +334,9 @@ The unavailability of the payment method or not all submitted fields can make pa
         {
             $order = new WC_Order($order_id);
             $order_key = $order->get_order_key();
+
+	        remove_all_filters('woocommerce_get_checkout_order_received_url');
+
             // Return thankyou redirect
             return [
                 'result' => 'success',
