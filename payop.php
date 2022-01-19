@@ -4,7 +4,7 @@ Plugin Name: PayOp
 Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
 Description: PayOp: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
 Author URI: https://payop.com/
-Version: 2.0.3
+Version: 2.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
@@ -334,6 +334,9 @@ The unavailability of the payment method or not all submitted fields can make pa
         {
             $order = new WC_Order($order_id);
             $order_key = $order->get_order_key();
+
+	        remove_all_filters('woocommerce_get_checkout_order_received_url');
+
             // Return thankyou redirect
             return [
                 'result' => 'success',
