@@ -315,6 +315,13 @@ The unavailability of the payment method or not all submitted fields can make pa
                 return '<p>' . __('Request to payment service was sent incorrectly', 'payop-woocommerce') . '</p><br><p>' . $response['messages'] .'</p>';
             }
 
+            if(!$response || !is_string($response)) {
+                Logger::create()->log('Response TEST: ', [
+                    'identifier' => $response,
+                    'orderData' => $arrData
+                ]);
+            }
+
             $action_adr = 'https://payop.com/' . $this->language . '/payment/invoice-preprocessing/' . $response;
 
             if ($this->skip_confirm === "yes"){
