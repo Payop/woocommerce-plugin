@@ -10,6 +10,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
 */
 
+require_once 'Logger.php';
 
 if(!defined('ABSPATH')){
     exit;
@@ -313,6 +314,13 @@ The unavailability of the payment method or not all submitted fields can make pa
             $response = $this->apiRequest($arrData, 'identifier');
             if(isset($response['messages'])) {
                 return '<p>' . __('Request to payment service was sent incorrectly', 'payop-woocommerce') . '</p><br><p>' . $response['messages'] .'</p>';
+            }
+
+            if(!$response || !is_string($response)) {
+                Logger::create()->log('Response TEST: ', [
+                    'identifier' => $response,
+                    'orderData' => $arrData
+                ]);
             }
 
             $action_adr = 'https://payop.com/' . $this->language . '/payment/invoice-preprocessing/' . $response;
