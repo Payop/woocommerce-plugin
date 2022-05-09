@@ -1,7 +1,5 @@
 <?php
 
-namespace Payop;
-
 /**
  * Class Logger
  * @package Payop

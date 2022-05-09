@@ -10,6 +10,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
 */
 
+require_once 'Logger.php';
 
 if(!defined('ABSPATH')){
     exit;
