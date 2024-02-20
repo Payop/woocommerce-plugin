@@ -1,6 +1,6 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.0.0
+Version: 3.0.1
 Requires at least: 6.3
 Tested up to: 6.4.3
 Requires PHP: 7.4 or higher
@@ -137,3 +137,6 @@ Use below parameters to configure your Payop project:
 * Added: Failed Order page
 * Fixed: Error stating "No payment methods available"
 * Fixed: Bug related to reordering
+
+= 3.0.1 =
+* General: minor changes
