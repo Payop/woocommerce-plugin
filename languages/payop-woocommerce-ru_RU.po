@@ -1,0 +1,131 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce PayOp Gateway 1.0.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2019-01-23 16:42+0200\n"
+"POT-Creation-Date: \n"
+"Language-Team: \n"
+"X-Generator: Poedit 2.0.6\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: ru\n"
+
+msgid "PayOp"
+msgstr "PayOp"
+
+# Настройка приема электронных платежей через PayOp.
+msgid "Take payments via PayOp"
+msgstr "Настройка приема электронных платежей через PayOp"
+
+# Шлюз отключен
+msgid "Gateway is disabled"
+msgstr "Шлюз отключен"
+
+# PayOp не поддерживает валюты Вашего магазина.
+msgid "PayOp does not support the currency of your store"
+msgstr "PayOp не поддерживает валюты Вашего магазина"
+
+# Активность способа оплаты
+msgid "Enable PayOp payments"
+msgstr "Включить платежи через PayOp"
+
+# Активен
+msgid "Enable/Disable"
+msgstr "Включить/Отключить"
+
+# Название способа оплаты
+msgid "Name of payment gateway"
+msgstr "Название способа оплаты"
+
+# Название способа оплаты, которое увидит пользователь при оформлении заказа
+msgid ""
+"The name of the payment gateway that the user see when placing the order"
+msgstr ""
+"Название способа оплаты, которое увидит пользователь при оформлении заказа"
+
+# Публичный ключ
+msgid "Public key"
+msgstr "Публичный ключ"
+
+# Секретный ключ
+msgid "Secret key"
+msgstr "Секретный ключ"
+
+# JWT Token
+msgid "JWT Token"
+msgstr "JWT Token"
+
+# Требуется для Directpay! Выдается в личном кабинете https://payop.com/en/profile/settings/jwt-token
+msgid "Required for Directpay! Issued in the client panel https://payop.com/en/profile/settings/jwt-token"
+msgstr "Требуется для Directpay! Выдается в личном кабинете https://payop.com/en/profile/settings/jwt-token"
+
+# Выдается в Личном кабинете https://payop.com
+msgid "Issued in the client panel https://payop.com"
+msgstr "Выдается в Личном кабинете https://payop.com"
+
+# Описание способа оплаты, которое клиент будет видеть на вашем сайте.
+msgid ""
+"Description of the payment gateway that the client will see on your site"
+msgstr "Описание способа оплаты, которое клиент будет видеть на вашем сайте"
+
+# Автозавершение заказа
+msgid "Order completion"
+msgstr "Автозавершение заказа"
+
+# Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты
+msgid ""
+"Automatic transfer of the order to the status \"Completed\" after successful "
+"payment"
+msgstr ""
+"Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты"
+
+# Язык платежной формы
+msgid "Payment form language"
+msgstr "Язык платежной формы"
+
+# Выберите язык платежной формы для Вашего магазина
+msgid "Select the language of the payment form for your store"
+msgstr "Выберите язык платежной формы для Вашего магазина"
+
+# Русский
+msgid "Russian"
+msgstr "Русский"
+
+# Английский
+msgid "English"
+msgstr "Английский"
+
+# Оплата заказа #
+msgid "Payment order #"
+msgstr "Оплата заказа #"
+
+# Запрос к платежному сервису был отправлен некорректно
+msgid "Request to payment service was sent incorrectly"
+msgstr "Запрос к платежному сервису был отправлен некорректно"
+
+# Оплатить
+msgid "Pay"
+msgstr "Оплатить"
+
+# Отказаться от оплаты & вернуться в корзину
+msgid "Refuse payment & return to cart"
+msgstr "Отказаться от оплаты & вернуться в корзину"
+
+# Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить.
+msgid "Thank you for your order, please click the button below to pay"
+msgstr "Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить"
+
+# Платеж успешно оплачен
+msgid "Payment successfully paid"
+msgstr "Платеж успешно оплачен"
+
+# Платеж не оплачен
+msgid "Payment not paid"
+msgstr "Платеж не оплачен"
+
+# Платеж успешно завершен
+msgid "Payment completed successfully"
+msgstr "Платеж успешно завершен"
