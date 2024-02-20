@@ -1,9 +1,12 @@
-﻿=== PayOp Official ===
+﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Requires at least: 5.0
-Tested up to: 5.3
-Requires PHP: 5.4.45
-Stable tag: 2.0.1
+Version: 3.0.0
+Requires at least: 6.3
+Tested up to: 6.4.3
+Requires PHP: 7.4 or higher
+WC requires at least: 8.3
+WC tested up to: 8.6.0
+Stable tag: 3.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -11,7 +14,7 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 
 == Description ==
 
-PayOp: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries.
+Payop: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries.
 Payments gateway for Growing Your Business in New Locations and fast online payments.
 
 What this module does for you:
@@ -29,18 +32,18 @@ Note: WooCommerce 3.0+ must be installed for this plugin to work.
 3. Click "Install Now".
 4. After plugin installed, activate the plugin in your WordPress admin area.
 5. Open the settings page for WooCommerce and click the "Payments" tab
-6. Click on the sub-item for PayOp.
+6. Click on the sub-item for Payop.
 7. Configure and save your settings accordingly.
 
-You can issue  **Public key**, **Secret key** and **JWT Token** after register as merchant on PayOp.com.
+You can issue  **Public key**, **Secret key** and **JWT Token** after register as merchant on Payop.com.
 
-Use below parameters to configure your PayOp project:
+Use below parameters to configure your Payop project:
 * **Callback/IPN URL**: https://{replace-with-your-domain}/?wc-api=wc_payop&payop=result
 
 == Support ==
 
-* [PayOp Documentation](https://payop.com/en/documentation/common/)
-* [Contact PayOp support](https://payop.com/en/contact-us/)
+* [Payop Documentation](https://payop.com/en/documentation/common/)
+* [Contact Payop support](https://payop.com/en/contact-us/)
 
 **TIP**: When contacting support it will help us is you provide:
 
@@ -120,3 +123,17 @@ Use below parameters to configure your PayOp project:
 
 = 2.0.4 =
 * Disallow override of page "order-received" by other plugins
+
+= 2.0.5 =
+* Small fixes
+
+= 3.0.0 =
+* General: plugin improvements
+* Optimized: General plugin improvements
+* Added: Compatibility with WordPress 6.4.x
+* Added: Compatibility with WooCommerce 8.6.x
+* Added: Support High-Performance Order Storage (HPOS)
+* Added: Support WooCommerce Checkout Blocks (Gutenberg)
+* Added: Page for failed order
+* Fixed: Error there are no payment methods available
+* Fixed: Reorder bug
