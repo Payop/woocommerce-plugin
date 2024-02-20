@@ -130,10 +130,10 @@ Use below parameters to configure your Payop project:
 = 3.0.0 =
 * General: plugin improvements
 * Optimized: General plugin improvements
-* Added: Compatibility with WordPress 6.4.x
-* Added: Compatibility with WooCommerce 8.6.x
-* Added: Support High-Performance Order Storage (HPOS)
-* Added: Support WooCommerce Checkout Blocks (Gutenberg)
-* Added: Page for failed order
-* Fixed: Error there are no payment methods available
-* Fixed: Reorder bug
+* Added: WordPress 6.4.x Compatibility
+* Added: WooCommerce 8.6.x Compatibility
+* Added: Support for High-Performance Order Storage (HPOS)
+* Added: Support for WooCommerce Checkout Blocks (Gutenberg)
+* Added: Failed Order page
+* Fixed: Error stating "No payment methods available"
+* Fixed: Bug related to reordering
