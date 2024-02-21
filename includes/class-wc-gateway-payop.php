@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 if (!defined('ABSPATH')) {
@@ -11,6 +11,76 @@ if (!defined('ABSPATH')) {
 }
 
 class WC_Gateway_Payop extends WC_Payment_Gateway {
+
+	/**
+	 * Public key for authentication with Payop API.
+	 *
+	 * @var string
+	 */
+	public $public_key;
+
+	/**
+	 * URL for making requests to Payop API.
+	 *
+	 * @var string
+	 */
+	public $apiUrl;
+
+	/**
+	 * JSON Web Token (JWT) token for authentication with Payop API.
+	 *
+	 * @var string
+	 */
+	public $jwt_token;
+
+	/**
+	 * Secret key for signing requests to Payop API.
+	 *
+	 * @var string
+	 */
+	public $secret_key;
+
+	/**
+	 * Flag indicating whether to skip confirmation step before payment.
+	 *
+	 * @var string
+	 */
+	public $skip_confirm;
+
+	/**
+	 * Lifetime of the payment link.
+	 *
+	 * @var string
+	 */
+	public $lifetime;
+
+	/**
+	 * Flag indicating whether orders should be auto-completed after successful payment.
+	 *
+	 * @var string
+	 */
+	public $auto_complete;
+
+	/**
+	 * Selected payment method.
+	 *
+	 * @var string
+	 */
+	public $payment_method;
+
+	/**
+	 * Language code for the payment form.
+	 *
+	 * @var string
+	 */
+	public $language;
+
+	/**
+	 * Instructions for the payment.
+	 *
+	 * @var string
+	 */
+	public $instructions;
 
 	public function __construct() {
 		global $woocommerce;
@@ -251,8 +321,8 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	 * Checks if payment is needed for an order with the Payop payment gateway
 	 * and disables payment for orders with 'failed' status.
 	 *
-	 * @param bool   $needs_payment        The current value indicating whether payment is needed for the order.
-	 * @param object $order                The order object.
+	 * @param bool   $needs_payment		The current value indicating whether payment is needed for the order.
+	 * @param object $order				The order object.
 	 * @param array  $valid_order_statuses An array of valid order statuses.
 	 * @return bool Returns false if payment is not required for orders with 'failed' status and the Payop payment gateway.
 	 */
