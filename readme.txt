@@ -1,7 +1,7 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.0.3
-Stable tag: 3.0.3
+Version: 3.0.4
+Stable tag: 3.0.4
 Requires at least: 6.3
 Tested up to: 6.4.3
 Requires PHP: 7.4
