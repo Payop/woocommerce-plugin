@@ -6,10 +6,10 @@ Description: Payop: Online payment processing service ➦ Accept payments online
 Author URI: https://payop.com/
 Version: 3.0.4
 Requires at least: 6.3
-Tested up to: 6.4.3
+Tested up to: 6.5.2
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 8.6.1
+WC tested up to: 8.8.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
