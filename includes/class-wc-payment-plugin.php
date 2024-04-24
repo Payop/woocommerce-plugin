@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway Plugin.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 if (!defined('ABSPATH')) {
@@ -28,7 +28,6 @@ class Payop_WC_Payment_Plugin {
 			return;
 		}
 
-		//load_plugin_textdomain('payop-woocommerce', false, PAYOP_LANGUAGES_PATH);
 		$this->load_gateway();
 		add_filter('plugin_action_links_' . PAYOP_PLUGIN_BASENAME, [$this, 'add_settings_link']);
 		add_filter('woocommerce_payment_gateways', [$this, 'add_payop_gateway']);
