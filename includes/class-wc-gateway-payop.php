@@ -172,6 +172,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 					'phone' => $order->get_billing_phone() ?: ''
 				],
 				'language' => $this->language,
+				'productUrl' => $site_url,
 				'resultUrl' => $site_url . "/?wc-api=wc_payop&payop=success&orderId={$order_id}",
 				'failPath' => $site_url . "/?wc-api=wc_payop&payop=fail&orderId={$order_id}",
 				'signature' => $signature
@@ -281,7 +282,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				wp_die('Status fail', 'Status fail', 200);
 			}
 			do_action('payop-ipn-request', $posted_data);
-		} elseif ($valid = IPN_VERSION_V1) {
+		} elseif ($valid === IPN_VERSION_V1) {
 			if ($posted_data['status'] === 'wait') {
 				wp_die('Status wait', 'Status wait', 200);
 			}
