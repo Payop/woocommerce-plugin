@@ -86,7 +86,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		$this->skip_confirm = $this->get_option('skip_confirm');
 		$this->lifetime = $this->get_option('lifetime');
 		$this->auto_complete = $this->get_option('auto_complete');
-		$this->language = $this->get_option('payment_form_language');
+		$this->language = 'en';
 		$this->description = $this->get_option('description');
 		$this->instructions = $this->get_option('instructions');
 
