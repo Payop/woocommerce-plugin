@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.0.5
-Stable tag: 3.0.5
+Version: 3.0.6
+Stable tag: 3.0.6
 Requires at least: 6.3
 Tested up to: 6.5.3
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 8.9.1
+WC tested up to: 8.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.2
+ * @version 1.0.3
  */
 
 if (!defined('ABSPATH')) {
@@ -70,7 +70,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 
 	public function __construct()
 	{
-		$this->api_url = 'https://payop.com/v1/invoices/create';
+		$this->api_url = 'https://api.payop.com/v1/invoices/create';
 
 		$this->id = PAYOP_PAYMENT_GATEWAY_NAME;
 		$this->icon = apply_filters('woocommerce_payop_icon', '' . PAYOP_PLUGIN_URL . '/payop.png');
@@ -187,7 +187,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			return '<p>' . __('Request to payment service was sent incorrectly', 'payop-woocommerce') . '</p><br><p>' . $response['messages'] .'</p>';
 		}
 
-		$action_adr = 'https://payop.com/' . $this->language . '/payment/invoice-preprocessing/' . $response;
+		$action_adr = 'https://checkout.payop.com/' . $this->language . '/payment/invoice-preprocessing/' . $response;
 
 		if ($this->skip_confirm === "yes"){
 			wp_redirect(esc_url($action_adr));
@@ -264,7 +264,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		@ob_clean();
 		$posted_data = wp_unslash($posted_data);
 		$valid = $this->check_ipn_request_is_valid($posted_data);
-		if ($valid === IPN_VERSION_V2){
+		if ($valid === PAYOP_IPN_VERSION_V2){
 			if ($posted_data['transaction']['state'] === 4) {
 				wp_die('Status wait', 'Status wait', 200);
 			}
@@ -282,7 +282,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				wp_die('Status fail', 'Status fail', 200);
 			}
 			do_action('payop-ipn-request', $posted_data);
-		} elseif ($valid === IPN_VERSION_V1) {
+		} elseif ($valid === PAYOP_IPN_VERSION_V1) {
 			if ($posted_data['status'] === 'wait') {
 				wp_die('Status wait', 'Status wait', 200);
 			}
@@ -437,7 +437,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				array_push($data_set, $this->secret_key);
 
 				if ($posted['signature'] === hash(PAYOP_HASH_ALGORITHM, implode(':', $data_set))) {
-					return IPN_VERSION_V1;
+					return PAYOP_IPN_VERSION_V1;
 				}
 				return 'Invalid signature';
 			}
@@ -455,7 +455,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		if (!(1 <= $state && $state <= 5)) {
 			return 'State is not valid';
 		}
-		return IPN_VERSION_V2;
+		return PAYOP_IPN_VERSION_V2;
 	}
 
 	/**
