@@ -157,3 +157,7 @@ Use below parameters to configure your Payop project:
 = 3.0.5 =
 * Added: Compatibility with WooCommerce 8.9.x
 * Fixed: Resolved 404 error on the checkout page
+
+= 3.0.6 =
+* General: changed the domain for the API
+* Optimized: General plugin improvements
