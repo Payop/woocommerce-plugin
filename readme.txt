@@ -161,3 +161,7 @@ Use below parameters to configure your Payop project:
 = 3.0.6 =
 * General: changed the domain for the API
 * Optimized: General plugin improvements
+
+= 3.0.7 =
+* Added: WordPress 6.6.x Compatibility
+* Added: WooCommerce 9.1.x Compatibility
