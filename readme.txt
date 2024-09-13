@@ -165,3 +165,7 @@ Use below parameters to configure your Payop project:
 = 3.0.7 =
 * Added: WordPress 6.6.x Compatibility
 * Added: WooCommerce 9.1.x Compatibility
+
+= 3.0.8 =
+* Added: WooCommerce 9.3.x Compatibility
+* Fixed: Fixed an issue where a space was sent if the first name and/or last name were missing in the payment data, causing validation errors. Now, if one or both fields are empty, an appropriate string is sent.
