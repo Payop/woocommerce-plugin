@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.3
+ * @version 1.0.4
  */
 
 if (!defined('ABSPATH')) {
@@ -157,6 +157,9 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			$data_set[] = $this->secret_key;
 			$signature = hash(PAYOP_HASH_ALGORITHM, implode(':', $data_set));
 
+			$first_name = $order->get_billing_first_name();
+			$last_name = $order->get_billing_last_name();
+
 			$arr_data = [
 				'publicKey' => $this->public_key,
 				'order' => [
@@ -168,7 +171,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				],
 				'payer' => [
 					'email' => $order->get_billing_email(),
-					'name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+					'name' => implode(' ', array_filter([$first_name, $last_name])),
 					'phone' => $order->get_billing_phone() ?: ''
 				],
 				'language' => $this->language,
