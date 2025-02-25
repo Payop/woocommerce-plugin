@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.0.8
-Stable tag: 3.0.8
+Version: 3.0.9
+Stable tag: 3.0.9
 Requires at least: 6.3
-Tested up to: 6.6
+Tested up to: 6.7.2
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 9.3.1
+WC tested up to: 9.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -169,3 +169,10 @@ Use below parameters to configure your Payop project:
 = 3.0.8 =
 * Added: WooCommerce 9.3.x Compatibility
 * Fixed: Fixed an issue where a space was sent if the first name and/or last name were missing in the payment data, causing validation errors. Now, if one or both fields are empty, an appropriate string is sent.
+
+= 3.0.9 =
+* Optimized: Centralized status mapping logic for better maintainability.
+* Improved: Enhanced readability and consistency in `process_result_request` method.
+* Added: WooCommerce 9.7.x Compatibility
+* Added: WordPress 6.7.x Compatibility
+* Fixed: Addressed redundant status checks by introducing a dedicated mapping method.
