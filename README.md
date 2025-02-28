@@ -22,7 +22,7 @@ Add the ability to accept payments in WooCommerce via Payop.com.
  7. Click on the sub-item for Payop.
  8. Configure and save your settings accordingly.
 
-You can issue  **Public key** , **Secret key** and **JWT Token** after register as merchant on Payop.com.
+You can issue  **Public key** and **Secret key** after register as merchant on Payop.com.
 
 Use below parameters to configure your Payop project:
 * **Callback/IPN URL**: https://{replace-with-your-domain}/?wc-api=wc_payop&payop=result
