@@ -11,7 +11,6 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 - Wordpress 6.3+
 - WooCommerce 8.3+
 
-
 ## Installation Guide for Payop in WordPress WooCommerce
 
 ### 1. Download the Latest Release
@@ -49,7 +48,6 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 3. Select the desired project and click **Details**.
 4. Copy the `Public Key` and `Secret Key` from the project settings.
 5. Paste them into the corresponding fields in the WooCommerce plugin settings.
-
 
 ## Support
 
