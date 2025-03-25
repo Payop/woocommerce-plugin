@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.0.9
-Stable tag: 3.0.9
+Version: 3.0.10
+Stable tag: 3.0.10
 Requires at least: 6.3
 Tested up to: 6.7.2
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 9.7.0
+WC tested up to: 9.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,20 +25,40 @@ What this module does for you:
 
 == Installation ==
 
-Note: WooCommerce 3.0+ must be installed for this plugin to work.
+**Minimum Requirement:** WooCommerce 8.3 or higher must be installed and activated.
 
-1. Log in to your WordPress dashboard, navigate to the Plugins menu and click "Add New" button
-2. Click "Upload Plugin" button and choose release archive
-3. Click "Install Now".
-4. After plugin installed, activate the plugin in your WordPress admin area.
-5. Open the settings page for WooCommerce and click the "Payments" tab
-6. Click on the sub-item for Payop.
-7. Configure and save your settings accordingly.
+= Install via WordPress Plugin Repository =
 
-You can issue  **Public key**, **Secret key** and **JWT Token** after register as merchant on Payop.com.
+1. Go to your WordPress admin dashboard.
+2. Navigate to **Plugins → Add New**.
+3. Search for **Payop WooCommerce**.
+4. Click **Install Now**, then **Activate**.
 
-Use below parameters to configure your Payop project:
-* **Callback/IPN URL**: https://{replace-with-your-domain}/?wc-api=wc_payop&payop=result
+= Configure Payop Payment Gateway =
+
+1. Go to **WooCommerce → Settings → Payments**.
+2. Find **Payop** in the list and click **Enable**, then click **Set up**.
+3. Enter your credentials:
+   - **Public Key** – Available in your Payop merchant dashboard.
+   - **Secret Key** – Available in your Payop merchant dashboard.
+
+= Set Callback/IPN URL =
+
+1. In the Payop settings section, you'll find an automatically generated **Callback / IPN URL**:
+   Example: https://your-domain.com/?wc-api=wc_payop&payop=result
+2. Go to [https://payop.com](https://payop.com) and log in.
+3. Navigate to **Projects → Details** of your selected project.
+4. Open the **IPN** section and click **Add new IPN**.
+5. Paste the copied URL into the appropriate field and save.
+
+= Where to Find Public and Secret Keys =
+
+1. Log in to your merchant account at [https://payop.com](https://payop.com).
+2. Go to **Projects → Project List**.
+3. Click **Details** for your project.
+4. Copy your **Public Key** and **Secret Key**.
+5. Paste them into the corresponding fields in WooCommerce Payop plugin settings.
+
 
 == Support ==
 
@@ -176,3 +196,8 @@ Use below parameters to configure your Payop project:
 * Added: WooCommerce 9.7.x Compatibility
 * Added: WordPress 6.7.x Compatibility
 * Fixed: Addressed redundant status checks by introducing a dedicated mapping method.
+
+= 3.0.10 =
+* Added: Read-only IPN URL field in plugin settings
+* Updated: Installation and configuration documentation
+* Improved: Internal code refactoring for better maintainability and readability  
