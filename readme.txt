@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.0.10
-Stable tag: 3.0.10
+Version: 3.0.11
+Stable tag: 3.0.11
 Requires at least: 6.3
-Tested up to: 6.7.2
+Tested up to: 6.8.1
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 9.7.1
+WC tested up to: 9.9.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -201,3 +201,6 @@ What this module does for you:
 * Added: Read-only IPN URL field in plugin settings
 * Updated: Installation and configuration documentation
 * Improved: Internal code refactoring for better maintainability and readability  
+
+= 3.0.11 =
+* Fixed: Fixed Incorrect behaviour when pressing the `Back` button in the browser
