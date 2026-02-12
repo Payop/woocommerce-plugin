@@ -1,7 +1,7 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.1.0
-Stable tag: 3.1.0
+Version: 3.1.1
+Stable tag: 3.1.1
 Requires at least: 6.3
 Tested up to: 6.8.1
 Requires PHP: 7.4
@@ -205,7 +205,7 @@ What this module does for you:
 = 3.0.11 =
 * Fixed: Fixed Incorrect behaviour when pressing the `Back` button in the browser
 
-= 3.1.0 =
+= 3.1.1 =
 * Security: Fixed critical vulnerability where forged GET request could mark any order as paid.
 * Security: Added strict validation to prevent processing non-Payop orders via Payop endpoints (payment method check + invoice meta binding).
 * Security: Improved IPN validation by binding Payop invoice/txid to WooCommerce order and rejecting mismatches.
