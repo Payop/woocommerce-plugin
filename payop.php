@@ -4,12 +4,12 @@ Plugin Name: Payop WooCommerce Payment Gateway
 Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
 Description: Payop: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
 Author URI: https://payop.com/
-Version: 3.0.11
+Version: 3.1.0
 Requires at least: 6.3
 Tested up to: 6.8.1
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 9.9.4
+WC tested up to: 10.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
