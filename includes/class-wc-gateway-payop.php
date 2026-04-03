@@ -92,8 +92,8 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 
 		//Actions
 		add_action('payop-ipn-request', [$this, 'successful_request']);
+		// Keep the hosted payment form only on the order-pay page to avoid reopening it after browser redirects.
 		add_action('woocommerce_receipt_' . $this->id, [$this, 'receipt_page']);
-		add_action('woocommerce_thankyou_' . $this->id, [$this, 'receipt_page']);
 
 		add_filter( 'woocommerce_order_needs_payment', [$this, 'prevent_payment_for_failed_orders'], 10, 3 );
 
@@ -160,23 +160,23 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			$first_name = $order->get_billing_first_name();
 			$last_name = $order->get_billing_last_name();
 
-			$result_url = add_query_arg(
+			$result_url = esc_url_raw(add_query_arg(
 				[
 					'wc-api' => 'wc_payop',
 					'payop'  => 'success',
 					'orderId' => $order_id
 				],
-				$order->get_checkout_order_received_url()
-			);
+				$this->normalize_external_redirect_url($order->get_checkout_order_received_url())
+			));
 
-			$fail_path = add_query_arg(
+			$fail_path = esc_url_raw(add_query_arg(
 				[
 					'wc-api' => 'wc_payop',
 					'payop'  => 'fail',
 					'orderId' => $order_id
 				],
-				$order->get_cancel_order_url()
-			);
+				$this->normalize_external_redirect_url($order->get_cancel_order_url())
+			));
 
 			$arr_data = [
 				'publicKey' => $this->public_key,
@@ -231,6 +231,21 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		$order_id = $data['transaction']['order']['id'] ?? $data['orderId'] ?? $data['order-received'] ?? null;
 		$order_id = is_scalar($order_id) ? absint($order_id) : 0;
 		return $order_id > 0 ? $order_id : null;
+	}
+
+	/**
+	 * Convert WooCommerce URLs intended for HTML output into raw URLs safe for external redirects.
+	 *
+	 * @param string $url
+	 * @return string
+	 */
+	private function normalize_external_redirect_url($url)
+	{
+		if (!is_string($url)) {
+			return '';
+		}
+
+		return esc_url_raw(html_entity_decode($url, ENT_QUOTES, 'UTF-8'));
 	}
 
 	/**
