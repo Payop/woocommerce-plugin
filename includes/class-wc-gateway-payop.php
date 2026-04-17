@@ -160,23 +160,8 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			$first_name = $order->get_billing_first_name();
 			$last_name = $order->get_billing_last_name();
 
-			$result_url = esc_url_raw(add_query_arg(
-				[
-					'wc-api' => 'wc_payop',
-					'payop'  => 'success',
-					'orderId' => $order_id
-				],
-				$this->normalize_external_redirect_url($order->get_checkout_order_received_url())
-			));
-
-			$fail_path = esc_url_raw(add_query_arg(
-				[
-					'wc-api' => 'wc_payop',
-					'payop'  => 'fail',
-					'orderId' => $order_id
-				],
-				$this->normalize_external_redirect_url($order->get_cancel_order_url())
-			));
+			$result_url = $this->get_payop_browser_return_url($order, 'success');
+			$fail_path = $this->get_payop_browser_return_url($order, 'fail');
 
 			$arr_data = [
 				'publicKey' => $this->public_key,
@@ -234,18 +219,64 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Convert WooCommerce URLs intended for HTML output into raw URLs safe for external redirects.
+	 * Build a browser return URL without exposing WooCommerce order tokens to the payment provider.
 	 *
-	 * @param string $url
+	 * @param WC_Order $order
+	 * @param string   $request_type
 	 * @return string
 	 */
-	private function normalize_external_redirect_url($url)
+	private function get_payop_browser_return_url($order, $request_type)
 	{
-		if (!is_string($url)) {
-			return '';
+		return esc_url_raw(add_query_arg(
+			[
+				'wc-api' => 'wc_' . $this->id,
+				'payop' => $request_type,
+				'orderId' => $order->get_id(),
+				'payopToken' => $this->get_payop_browser_return_token($order, $request_type),
+			],
+			home_url('/')
+		));
+	}
+
+	/**
+	 * Create an HMAC token for browser return requests so order URLs are only revealed on valid returns.
+	 *
+	 * @param WC_Order $order
+	 * @param string   $request_type
+	 * @return string
+	 */
+	private function get_payop_browser_return_token($order, $request_type)
+	{
+		$message = implode('|', [
+			$request_type,
+			$order->get_id(),
+			(string) $order->get_order_key(),
+		]);
+
+		return hash_hmac(PAYOP_HASH_ALGORITHM, $message, wp_salt('auth') . '|' . PAYOP_PAYMENT_GATEWAY_NAME);
+	}
+
+	/**
+	 * Validate browser return requests before redirecting to a WooCommerce URL that contains the order key.
+	 *
+	 * @param WC_Order $order
+	 * @param array    $request_data
+	 * @param string   $request_type
+	 * @return bool
+	 */
+	private function is_valid_payop_browser_return($order, array $request_data, $request_type)
+	{
+		$provided_token = $request_data['payopToken'] ?? '';
+		if (!is_scalar($provided_token)) {
+			return false;
 		}
 
-		return esc_url_raw(html_entity_decode($url, ENT_QUOTES, 'UTF-8'));
+		$provided_token = sanitize_text_field(wp_unslash((string) $provided_token));
+		if ($provided_token === '') {
+			return false;
+		}
+
+		return hash_equals($this->get_payop_browser_return_token($order, $request_type), $provided_token);
 	}
 
 	/**
@@ -450,8 +481,12 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	{
 		// IMPORTANT:
 		// Browser redirects (success/fail) are NOT a trusted signal.
+		$posted_data = wp_unslash($posted_data);
 		$order_id = $this->extract_order_id_from_request($posted_data);
 		$order = $this->get_payop_order_or_die($order_id);
+		if (!$this->is_valid_payop_browser_return($order, $posted_data, 'success')) {
+			wp_die('Invalid return token', 'Forbidden', 403);
+		}
 
 		$transaction_state = isset($posted_data['transaction']['state']) ? intval($posted_data['transaction']['state']) : null;
 
@@ -468,7 +503,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		}
 
 		$this->empty_cart();
-		wp_redirect($this->get_return_url($order));
+		wp_safe_redirect($this->get_return_url($order));
 		exit;
 	}
 
@@ -480,15 +515,19 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	 */
 	private function process_fail_request($posted_data){
 		// Fail redirect is also untrusted. Do not mark order failed based on GET.
+		$posted_data = wp_unslash($posted_data);
 		$order_id = $this->extract_order_id_from_request($posted_data);
 		$order = $this->get_payop_order_or_die($order_id);
+		if (!$this->is_valid_payop_browser_return($order, $posted_data, 'fail')) {
+			wp_die('Invalid return token', 'Forbidden', 403);
+		}
 
 		// NOTE:
 		// Do not change order status on fail redirect either.
 		// Status will be updated only via IPN/provider verification.
 
 		$this->empty_cart();
-		wp_redirect($this->get_return_url($order));
+		wp_safe_redirect($this->get_return_url($order));
 		exit;
 	}
 	 /**
