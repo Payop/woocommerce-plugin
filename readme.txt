@@ -1,7 +1,7 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.1.2
-Stable tag: 3.1.2
+Version: 3.1.3
+Stable tag: 3.1.3
 Requires at least: 6.3
 Tested up to: 6.9.1
 Requires PHP: 7.4
@@ -213,5 +213,8 @@ What this module does for you:
 = 3.1.2 =
 * Fixed: Prevented the hosted payment form from reopening on the thank-you page after browser redirects.
 * Improved: Normalized success and fail callback URLs before sending them to Payop.
+
+= 3.1.3 =
+* Fixed: Sensitive Data Leakage to Third-Party API.
 
 
