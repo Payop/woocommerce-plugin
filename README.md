@@ -57,13 +57,16 @@ Add the ability to accept payments in WooCommerce via Payop.com.
   
 **TIP**: When contacting support it will help us is you provide:
 
-* WordPress and WooCommerce Version
+* Description of the problem
+* Transaction ID/order ID
+* WordPress and WooCommerce Version  
 * Other plugins you have installed
   * Some plugins do not play nice
-* Configuration settings for the plugin (Most merchants take screen grabs)
+* Credentials to the plugin (if you are unable to provide them due to security reasons, please share a video or screenshots demonstrating the issue).
 * Any log files that will help
   * Web server error logs
 * Screen grabs of error message if applicable.
+
 
 ## Contribute
 
