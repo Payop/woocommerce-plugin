@@ -2,7 +2,7 @@
 /**
  * Settings for Payop Standard Gateway.
  *
- * @version 1.0.2
+ * @version 1.0.3
  */
 
 if (!defined('ABSPATH')) {
@@ -64,6 +64,14 @@ return [
 		'type' => 'checkbox',
 		'label' => __('Automatic transfer of the order to the status "Completed" after successful payment', 'payop-woocommerce'),
 		'default' => '1',
+	],
+
+	'detailed_logging' => [
+		'title' => __('Detailed logging', 'payop-woocommerce'),
+		'type' => 'checkbox',
+		'label' => __('Write detailed Payop callback/IPN logs to WooCommerce logs', 'payop-woocommerce'),
+		'description' => __('Order notes are always added for payment and callback events. Disable this option only to stop writing technical Payop entries to WooCommerce logs.', 'payop-woocommerce'),
+		'default' => 'no',
 	],
 
 	'skip_confirm' => [
