@@ -217,4 +217,6 @@ What this module does for you:
 = 3.1.3 =
 * Fixed: Sensitive Data Leakage to Third-Party API.
 
-
+= 3.1.4 =
+* Added: Detailed Payop order notes and WooCommerce logs for IPN/callback attempts, validation failures, payment status outcomes, and status update failures.
+* Added: Gateway setting to enable detailed technical WooCommerce logs when needed.
