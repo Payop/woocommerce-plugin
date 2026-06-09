@@ -4,7 +4,7 @@ Plugin Name: Payop WooCommerce Payment Gateway
 Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
 Description: Payop: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
 Author URI: https://payop.com/
-Version: 3.1.4
+Version: 3.1.5
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
@@ -29,6 +29,9 @@ define('PAYOP_INVITATE_RESPONSE', 'payop_invitate_response');
 // Store Payop identifiers separately to bind order <-> invoice/transaction.
 define('PAYOP_INVOICE_ID_META', 'payop_invoice_id');
 define('PAYOP_TXID_META', 'payop_txid');
+define('PAYOP_REDIRECTED_AT_META', 'payop_redirected_at');
+define('PAYOP_CALLBACK_RECEIVED_AT_META', 'payop_callback_received_at');
+define('PAYOP_ABANDONED_NOTE_ADDED_META', 'payop_abandoned_note_added');
 define('PAYOP_PLUGIN_NAME', 'Payop WooCommerce Payment Gateway');
 define('PAYOP_MIN_PHP_VERSION', '7.4');
 define('PAYOP_MIN_WP_VERSION', '6.3');

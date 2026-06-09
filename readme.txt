@@ -220,3 +220,7 @@ What this module does for you:
 = 3.1.4 =
 * Added: Detailed Payop order notes and WooCommerce logs for IPN/callback attempts, validation failures, payment status outcomes, and status update failures.
 * Added: Gateway setting to enable detailed technical WooCommerce logs when needed.
+
+= 3.1.5 =
+* Added: Payment flow order notes for checkout initiation, Payop invoice creation, and redirect/payment page display.
+* Added: Delayed possible-abandonment order note when no callback arrives after the payment page step.
