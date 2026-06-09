@@ -111,6 +111,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 
 		//Payment listner/API hook
 		add_action('woocommerce_api_wc_' . $this->id, [$this, 'check_ipn_response']);
+		add_action('payop_check_abandoned_payment', [$this, 'check_abandoned_payment']);
 
 		//Save options
 		add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
@@ -192,11 +193,37 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				'signature' => $signature
 			];
 
+			$invoice_details = [
+				'order_id' => $order->get_id(),
+				'amount' => $out_summ,
+				'currency' => $currency,
+			];
+			$this->add_payop_order_note($order, __('Payop invoice creation requested', 'payop-woocommerce'), $invoice_details);
+			$this->log_payop('info', 'Payop invoice creation requested', $invoice_details, $order);
+
 			$response = $this->api_request($arr_data, PAYOP_API_IDENTIFIER);
+			if (isset($response['messages'])) {
+				$invoice_details['error'] = is_array($response['messages']) ? wp_json_encode($response['messages']) : (string) $response['messages'];
+				$this->add_payop_order_note($order, __('Payop invoice creation failed', 'payop-woocommerce'), $invoice_details);
+				$this->log_payop('error', 'Payop invoice creation failed', $invoice_details, $order);
+				return '<p>' . __('Request to payment service was sent incorrectly', 'payop-woocommerce') . '</p><br><p>' . esc_html($invoice_details['error']) . '</p>';
+			}
+
+			if (!is_scalar($response) || (string) $response === '') {
+				$invoice_details['error'] = 'Empty invoice identifier';
+				$this->add_payop_order_note($order, __('Payop invoice creation failed', 'payop-woocommerce'), $invoice_details);
+				$this->log_payop('error', 'Payop invoice creation failed', $invoice_details, $order);
+				return '<p>' . __('Payment service did not return an invoice identifier', 'payop-woocommerce') . '</p>';
+			}
+
+			$response = sanitize_text_field((string) $response);
 			// $response is the invoice identifier returned in the response header.
 			$order->add_meta_data(PAYOP_INVITATE_RESPONSE, $response);
 			$order->add_meta_data(PAYOP_INVOICE_ID_META, $response);
 			$order->save_meta_data();
+			$invoice_details['invoice_id'] = $response;
+			$this->add_payop_order_note($order, __('Payop invoice created', 'payop-woocommerce'), $invoice_details);
+			$this->log_payop('info', 'Payop invoice created', $invoice_details, $order);
 		}
 
 		if(isset($response['messages'])) {
@@ -204,12 +231,23 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		}
 
 		$action_adr = 'https://checkout.payop.com/' . $this->language . '/payment/invoice-preprocessing/' . $response;
+		$redirect_details = [
+			'order_id' => $order->get_id(),
+			'invoice_id' => $response,
+			'gateway' => 'Payop',
+			'checkout_url' => $action_adr,
+		];
+		$this->mark_payop_redirect_started($order);
 
 		if ($this->skip_confirm === "yes"){
+			$this->add_payop_order_note($order, __('Redirected To Payment Page', 'payop-woocommerce'), $redirect_details);
+			$this->log_payop('info', 'Redirected To Payment Page', $redirect_details, $order);
 			wp_redirect(esc_url($action_adr));
 			exit;
 		}
 
+		$this->add_payop_order_note($order, __('Payop payment page displayed to customer', 'payop-woocommerce'), $redirect_details);
+		$this->log_payop('info', 'Payop payment page displayed to customer', $redirect_details, $order);
 		return $this->generate_payment_form_html($action_adr, $order);
 	}
 
@@ -356,12 +394,78 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			'method' => isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '',
 		], $this->get_payop_request_summary($posted_data));
 
+		if ($order instanceof WC_Order) {
+			$order->update_meta_data(PAYOP_CALLBACK_RECEIVED_AT_META, time());
+			$order->save_meta_data();
+		}
+
 		$this->add_payop_order_note($order, __('Payop callback attempt received', 'payop-woocommerce'), $details);
 		$this->log_payop('info', 'Payop callback attempt received', $details, $order);
 
 		if ($request_type === 'result') {
 			$this->log_payop('info', 'Payop IPN technical payload', ['payload' => $posted_data], $order);
 		}
+	}
+
+	/**
+	 * Mark that the customer reached the Payop checkout redirect step.
+	 *
+	 * @param WC_Order $order
+	 * @return void
+	 */
+	private function mark_payop_redirect_started($order)
+	{
+		if (!$order instanceof WC_Order) {
+			return;
+		}
+
+		$order->update_meta_data(PAYOP_REDIRECTED_AT_META, time());
+		$order->delete_meta_data(PAYOP_CALLBACK_RECEIVED_AT_META);
+		$order->delete_meta_data(PAYOP_ABANDONED_NOTE_ADDED_META);
+		$order->save_meta_data();
+
+		if (!wp_next_scheduled('payop_check_abandoned_payment', [$order->get_id()])) {
+			wp_schedule_single_event(time() + HOUR_IN_SECONDS, 'payop_check_abandoned_payment', [$order->get_id()]);
+		}
+	}
+
+	/**
+	 * Add an order note when no Payop callback arrives after the payment page step.
+	 *
+	 * @param int $order_id
+	 * @return void
+	 */
+	public function check_abandoned_payment($order_id)
+	{
+		$order = wc_get_order(absint($order_id));
+		if (!$order instanceof WC_Order || $order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+			return;
+		}
+
+		if ($order->get_meta(PAYOP_CALLBACK_RECEIVED_AT_META) || $order->get_meta(PAYOP_ABANDONED_NOTE_ADDED_META)) {
+			return;
+		}
+
+		if ($order->has_status(['processing', 'completed', 'failed', 'cancelled', 'refunded'])) {
+			return;
+		}
+
+		$redirected_at = absint($order->get_meta(PAYOP_REDIRECTED_AT_META));
+		if (!$redirected_at || time() < $redirected_at + HOUR_IN_SECONDS) {
+			return;
+		}
+
+		$details = [
+			'order_id' => $order->get_id(),
+			'invoice_id' => (string) $order->get_meta(PAYOP_INVOICE_ID_META),
+			'redirected_at' => gmdate('c', $redirected_at),
+			'waited_minutes' => 60,
+		];
+
+		$this->add_payop_order_note($order, __('User may have abandoned the payment page: no Payop callback received', 'payop-woocommerce'), $details);
+		$this->log_payop('warning', 'User may have abandoned the payment page: no Payop callback received', $details, $order);
+		$order->update_meta_data(PAYOP_ABANDONED_NOTE_ADDED_META, time());
+		$order->save_meta_data();
 	}
 
 	/**
@@ -811,6 +915,15 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	public function process_payment( $order_id )
 	{
 		$order = wc_get_order( $order_id );
+		$details = [
+			'order_id' => $order_id,
+			'amount' => $order ? number_format($order->get_total(), 4, '.', '') : '',
+			'currency' => $order ? $order->get_currency() : '',
+			'redirect' => $order ? $order->get_checkout_payment_url(true) : '',
+		];
+
+		$this->add_payop_order_note($order, __('Payop payment initiated at checkout', 'payop-woocommerce'), $details);
+		$this->log_payop('info', 'Payop payment initiated at checkout', $details, $order);
 
 		return [
 			'result'   => 'success',
