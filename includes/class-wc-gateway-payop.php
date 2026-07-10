@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.7
+ * @version 1.0.8
  */
 
 if (!defined('ABSPATH')) {
@@ -498,6 +498,132 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Fetch trusted invoice details from Payop.
+	 *
+	 * @param string $invoice_id
+	 * @return array
+	 */
+	private function fetch_payop_invoice_details($invoice_id)
+	{
+		$invoice_id = trim((string) $invoice_id);
+		if ($invoice_id === '') {
+			return ['ok' => false, 'error' => 'Empty invoice id'];
+		}
+
+		$response = wp_remote_get('https://api.payop.com/v1/invoices/' . rawurlencode($invoice_id), [
+			'sslverify' => true,
+			'timeout' => 30,
+			'headers' => [
+				'Accept' => 'application/json',
+				'Content-Type' => 'application/json',
+			],
+		]);
+
+		if (is_wp_error($response)) {
+			return ['ok' => false, 'error' => $response->get_error_message()];
+		}
+
+		$code = (int) wp_remote_retrieve_response_code($response);
+		$body = (string) wp_remote_retrieve_body($response);
+		$json = json_decode($body, true);
+
+		if ($code !== 200 || !is_array($json) || !isset($json['data']) || !is_array($json['data'])) {
+			return [
+				'ok' => false,
+				'error' => 'Invalid Payop invoice response',
+				'http' => $code,
+				'body' => substr($body, 0, 1000),
+			];
+		}
+
+		$data = $json['data'];
+
+		return [
+			'ok' => true,
+			'invoice_id' => isset($data['identifier']) ? (string) $data['identifier'] : '',
+			'status' => isset($data['status']) ? (int) $data['status'] : null,
+			'amount' => isset($data['amount']) ? (string) $data['amount'] : '',
+			'currency' => isset($data['currency']) ? (string) $data['currency'] : '',
+			'order_id' => isset($data['orderIdentifier']) ? (string) $data['orderIdentifier'] : '',
+			'txid' => isset($data['transactionIdentifier']) ? (string) $data['transactionIdentifier'] : '',
+			'is_overdue' => !empty($data['isOverdue']),
+			'raw' => $json,
+		];
+	}
+
+	/**
+	 * Confirm payment against Payop's invoice API before changing order status.
+	 *
+	 * @param WC_Order $order
+	 * @param array    $posted_data
+	 * @return array
+	 */
+	private function confirm_payop_order_by_invoice($order, array $posted_data = [])
+	{
+		if (!$order instanceof WC_Order) {
+			return ['ok' => false, 'error' => 'Invalid order'];
+		}
+
+		if ($order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+			return ['ok' => false, 'error' => 'Payment method mismatch'];
+		}
+
+		$expected_invoice_id = trim((string) $order->get_meta(PAYOP_INVOICE_ID_META));
+		$ipn_invoice_id = isset($posted_data['invoice']['id']) ? trim((string) $posted_data['invoice']['id']) : '';
+
+		if ($expected_invoice_id === '') {
+			return ['ok' => false, 'error' => 'Missing stored invoice id'];
+		}
+
+		if ($ipn_invoice_id !== '' && $ipn_invoice_id !== $expected_invoice_id) {
+			return ['ok' => false, 'error' => 'Invoice id mismatch'];
+		}
+
+		$invoice_check = $this->fetch_payop_invoice_details($expected_invoice_id);
+		if (empty($invoice_check['ok'])) {
+			return $invoice_check;
+		}
+
+		$expected_order_id = (string) $order->get_id();
+		$expected_amount = number_format((float) $order->get_total(), 4, '.', '');
+		$expected_currency = strtoupper((string) $order->get_currency());
+
+		$invoice_id = (string) ($invoice_check['invoice_id'] ?? '');
+		$invoice_status = (int) ($invoice_check['status'] ?? -1);
+		$invoice_order_id = (string) ($invoice_check['order_id'] ?? '');
+		$invoice_amount = ($invoice_check['amount'] ?? '') !== ''
+			? number_format((float) $invoice_check['amount'], 4, '.', '')
+			: '';
+		$invoice_currency = strtoupper((string) ($invoice_check['currency'] ?? ''));
+
+		if ($invoice_id === '' || $invoice_id !== $expected_invoice_id) {
+			return ['ok' => false, 'error' => 'Payop invoice identifier mismatch', 'invoice_check' => $invoice_check];
+		}
+
+		if ($invoice_status !== 1) {
+			if (in_array($invoice_status, [2, 5], true)) {
+				return ['ok' => true, 'final' => true, 'state' => 'failed', 'invoice_check' => $invoice_check];
+			}
+
+			return ['ok' => true, 'final' => false, 'state' => 'pending', 'invoice_check' => $invoice_check];
+		}
+
+		if ($invoice_order_id === '' || $invoice_order_id !== $expected_order_id) {
+			return ['ok' => false, 'error' => 'Payop invoice order ID mismatch', 'invoice_check' => $invoice_check];
+		}
+
+		if ($invoice_amount === '' || $invoice_amount !== $expected_amount) {
+			return ['ok' => false, 'error' => 'Payop invoice amount mismatch', 'invoice_check' => $invoice_check];
+		}
+
+		if ($invoice_currency === '' || $invoice_currency !== $expected_currency) {
+			return ['ok' => false, 'error' => 'Payop invoice currency mismatch', 'invoice_check' => $invoice_check];
+		}
+
+		return ['ok' => true, 'final' => true, 'state' => 'paid', 'invoice_check' => $invoice_check];
+	}
+
+	/**
 	 * Build a browser return URL without exposing WooCommerce order tokens to the payment provider.
 	 *
 	 * @param WC_Order $order
@@ -690,45 +816,74 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		$valid = $this->check_ipn_request_is_valid($posted_data);
 
 		if ($valid === PAYOP_IPN_VERSION_V2) {
-			$state = $posted_data['transaction']['state'];
 			$order_id = $this->extract_order_id_from_request($posted_data);
 			$order = $this->get_payop_order_or_die($order_id);
-
-			$wc_status = $this->map_status_to_wc($state);
-			if (!$wc_status) {
-				$details = array_merge(['reason' => 'Unknown status'], $this->get_payop_request_summary($posted_data));
-				$this->add_payop_order_note($order, __('Payop IPN processing failed', 'payop-woocommerce'), $details);
-				$this->log_payop('error', 'Payop IPN processing failed', $details, $order);
-				wp_die('Unknown status', 'Unknown status', 400);
-			}
-
-			// Bind txid to the order the first time we see it.
-			if (!empty($posted_data['invoice']['txid'])) {
-				$order->update_meta_data(PAYOP_TXID_META, sanitize_text_field((string) $posted_data['invoice']['txid']));
-				$order->save();
-			}
-
 			$details = array_merge(['ipn_version' => PAYOP_IPN_VERSION_V2], $this->get_payop_request_summary($posted_data));
-			$this->add_payop_order_note($order, __('Payop IPN validation passed', 'payop-woocommerce'), $details);
-			if (in_array((int) $state, [1, 4], true)) {
-				$this->add_payop_order_note($order, __('Payop payment pending', 'payop-woocommerce'), $details);
-				$this->log_payop('info', 'Payop payment pending', $details, $order);
-			} elseif ((int) $state === 2) {
-				$this->add_payop_order_note($order, __('Payop payment paid', 'payop-woocommerce'), $details);
-				$this->log_payop('info', 'Payop payment paid', $details, $order);
-			} elseif (in_array((int) $state, [3, 5, 15], true)) {
-				$this->add_payop_order_note($order, __('Payop payment failed', 'payop-woocommerce'), $details);
-				$this->log_payop('warning', 'Payop payment failed', $details, $order);
-			} elseif ((int) $state === 9) {
-				$this->add_payop_order_note($order, __('Payop payment pre-approved by provider', 'payop-woocommerce'), $details);
-				$this->log_payop('info', 'Payop payment pre-approved by provider', $details, $order);
+
+			$this->add_payop_order_note($order, __('Payop IPN received; verifying invoice with Payop API', 'payop-woocommerce'), $details);
+			$this->log_payop('info', 'Payop IPN received; verifying invoice with Payop API', $details, $order);
+
+			$confirmation = $this->confirm_payop_order_by_invoice($order, $posted_data);
+			$confirmation_details = array_merge($details, [
+				'verification_state' => (string) ($confirmation['state'] ?? ''),
+				'verification_error' => (string) ($confirmation['error'] ?? ''),
+			]);
+
+			if (empty($confirmation['ok'])) {
+				$this->add_payop_order_note($order, __('Payop invoice verification failed', 'payop-woocommerce'), $confirmation_details);
+				$this->log_payop('error', 'Payop invoice verification failed', $confirmation_details, $order);
+				wp_die('CHECK_FAILED', 'CHECK_FAILED', 200);
 			}
 
-			if (!$this->update_payop_order_status($order, $wc_status, __('Transaction status updated', 'payop-woocommerce'), $details)) {
-				wp_die('Status update failed', 'Status update failed', 500);
+			$state = (string) ($confirmation['state'] ?? '');
+			if ($state === 'paid') {
+				$txid = (string) ($confirmation['invoice_check']['txid'] ?? '');
+				if ($txid !== '') {
+					$order->update_meta_data(PAYOP_TXID_META, sanitize_text_field($txid));
+					$order->save();
+				}
+
+				$this->add_payop_order_note($order, __('Payop invoice verified as paid', 'payop-woocommerce'), $confirmation_details);
+				$this->log_payop('info', 'Payop invoice verified as paid', $confirmation_details, $order);
+
+				if (!$order->is_paid()) {
+					$order->payment_complete($txid);
+				}
+
+				$wc_status = $this->auto_complete === 'yes' ? 'completed' : 'processing';
+				if (!$order->has_status(['processing', 'completed'])) {
+					if (!$this->update_payop_order_status($order, $wc_status, __('Payop invoice verified as paid', 'payop-woocommerce'), $confirmation_details)) {
+						wp_die('Status update failed', 'Status update failed', 500);
+					}
+				} elseif ($this->auto_complete === 'yes' && !$order->has_status('completed')) {
+					if (!$this->update_payop_order_status($order, 'completed', __('Payop invoice verified as paid', 'payop-woocommerce'), $confirmation_details)) {
+						wp_die('Status update failed', 'Status update failed', 500);
+					}
+				}
+
+				wp_die('PAID', 'PAID', 200);
 			}
-			do_action('payop-ipn-request', $posted_data);
-			wp_die('Status updated', 'Status updated', 200);
+
+			if ($state === 'failed') {
+				$this->add_payop_order_note($order, __('Payop invoice verified as failed or overdue', 'payop-woocommerce'), $confirmation_details);
+				$this->log_payop('warning', 'Payop invoice verified as failed or overdue', $confirmation_details, $order);
+				if (!$order->has_status(['failed', 'cancelled', 'refunded'])) {
+					if (!$this->update_payop_order_status($order, 'failed', __('Payop invoice verified as failed or overdue', 'payop-woocommerce'), $confirmation_details)) {
+						wp_die('Status update failed', 'Status update failed', 500);
+					}
+				}
+				wp_die('FAILED', 'FAILED', 200);
+			}
+
+			$this->add_payop_order_note($order, __('Payop invoice is not paid yet; waiting for confirmation', 'payop-woocommerce'), $confirmation_details);
+			$this->log_payop('info', 'Payop invoice is not paid yet; waiting for confirmation', $confirmation_details, $order);
+			if (!$order->has_status(['pending', 'on-hold', 'processing', 'completed'])) {
+				if (!$this->update_payop_order_status($order, 'on-hold', __('Payop invoice is not paid yet; waiting for confirmation', 'payop-woocommerce'), $confirmation_details)) {
+					wp_die('Status update failed', 'Status update failed', 500);
+				}
+			}
+
+			wp_die('WAIT', 'WAIT', 200);
 		} elseif ($valid === PAYOP_IPN_VERSION_V1) {
 			$status = $posted_data['status'];
 			$order_id = $this->extract_order_id_from_request($posted_data);
@@ -1053,8 +1208,13 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	 */
 	public function successful_request( $posted )
 	{
-		// This hook is triggered after a valid IPN. Keep it defensive.
+		// V2 IPN is completed directly after server-side Payop invoice verification.
 		$posted = is_array($posted) ? $posted : [];
+		if (isset($posted['invoice']['id'])) {
+			exit;
+		}
+
+		// This hook is triggered after a valid signed V1 IPN. Keep it defensive.
 		$order_id = $this->extract_order_id_from_request($posted);
 		$order = $this->get_payop_order_or_die($order_id);
 		$details = $this->get_payop_request_summary($posted);
@@ -1096,7 +1256,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	{
 		$request_url = $this->api_url;
 		$args = [
-			'sslverify' => false,
+			'sslverify' => true,
 			'timeout' => 45,
 			'headers' => [
 				'Content-Type' => 'application/json'

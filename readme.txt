@@ -1,7 +1,7 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.1.4
-Stable tag: 3.1.4
+Version: 3.1.6
+Stable tag: 3.1.6
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
@@ -224,3 +224,8 @@ What this module does for you:
 = 3.1.5 =
 * Added: Payment flow order notes for checkout initiation, Payop invoice creation, and redirect/payment page display.
 * Added: Delayed possible-abandonment order note when no callback arrives after the payment page step.
+
+= 3.1.6 =
+* Security: Verify Payop V2 IPN payment status with the Payop invoice API before marking orders as paid.
+* Security: Validate invoice ID, order ID, amount, and currency against trusted Payop API data before completing orders.
+* Security: Enabled SSL certificate verification for Payop API requests.
