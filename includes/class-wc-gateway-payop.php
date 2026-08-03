@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.8
+ * @version 1.1.0
  */
 
 if (!defined('ABSPATH')) {
@@ -11,6 +11,34 @@ if (!defined('ABSPATH')) {
 }
 
 class WC_Gateway_Payop extends WC_Payment_Gateway {
+
+	/**
+	 * Human-readable gateway number. The primary gateway is number 1.
+	 *
+	 * @var int
+	 */
+	private $gateway_number = 1;
+
+	/**
+	 * Hosted Page integration type.
+	 *
+	 * @var string
+	 */
+	public $integration_type;
+
+	/**
+	 * Optional Payop payment method identifier.
+	 *
+	 * @var string
+	 */
+	public $payment_method;
+
+	/**
+	 * JWT token used only to retrieve payment methods available to the project.
+	 *
+	 * @var string
+	 */
+	public $jwt_token;
 
 	/**
 	 * Public key for authentication with Payop API.
@@ -75,50 +103,475 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	 */
 	public $detailed_logging;
 
-	public function __construct()
+	/**
+	 * Available payment methods loaded for the admin settings page.
+	 *
+	 * @var array|null
+	 */
+	private $available_payment_methods;
+
+	/**
+	 * Error returned while loading available payment methods.
+	 *
+	 * @var string
+	 */
+	private $available_payment_methods_error = '';
+
+	/**
+	 * @param int $gateway_number Human-readable gateway number, starting at 1.
+	 */
+	public function __construct($gateway_number = 1)
 	{
+		$this->gateway_number = max(1, absint($gateway_number));
 		$this->api_url = 'https://api.payop.com/v1/invoices/create';
 
-		$this->id = PAYOP_PAYMENT_GATEWAY_NAME;
+		$this->id = self::get_gateway_id($this->gateway_number);
 		$this->icon = apply_filters('woocommerce_payop_icon', '' . PAYOP_PLUGIN_URL . '/payop.png');
 
-		// Load the settings
-		$this->init_form_fields();
-		$this->init_settings();
+		$primary_settings = (array) get_option('woocommerce_' . PAYOP_PAYMENT_GATEWAY_NAME . '_settings', []);
+		if ($this->is_primary_gateway()) {
+			$this->init_form_fields();
+			$this->init_settings();
+			$primary_settings = (array) $this->settings;
+			$gateway_settings = $primary_settings;
+		} else {
+			$this->form_fields = [];
+			$gateway_settings = self::get_button_configuration($this->gateway_number, $primary_settings);
+			$this->settings = $gateway_settings;
+		}
+
+		$this->method_title = $this->is_primary_gateway()
+			? __('Payop', 'payop-woocommerce')
+			: (isset($gateway_settings['title']) ? (string) $gateway_settings['title'] : sprintf(__('Payop payment option #%d', 'payop-woocommerce'), $this->gateway_number));
+		$this->method_description = $this->is_primary_gateway()
+			? __('Take payments via Payop.', 'payop-woocommerce')
+			: __('This Payop checkout button is managed from the primary Payop gateway settings.', 'payop-woocommerce');
 
 		// Define user set variables
-		$this->title = $this->get_option('title');
-		$this->public_key = $this->get_option('public_key');
-		$this->secret_key = $this->get_option('secret_key');
-		$this->skip_confirm = $this->get_option('skip_confirm');
-		$this->lifetime = $this->get_option('lifetime');
-		$this->auto_complete = $this->get_option('auto_complete');
+		$this->enabled = isset($gateway_settings['enabled']) ? (string) $gateway_settings['enabled'] : ($this->is_primary_gateway() ? 'yes' : 'no');
+		$this->title = isset($gateway_settings['title']) ? (string) $gateway_settings['title'] : $this->method_title;
+		$this->public_key = isset($primary_settings['public_key']) ? (string) $primary_settings['public_key'] : '';
+		$this->secret_key = isset($primary_settings['secret_key']) ? (string) $primary_settings['secret_key'] : '';
+		$this->jwt_token = isset($primary_settings['jwt_token']) ? (string) $primary_settings['jwt_token'] : '';
+		$this->skip_confirm = isset($primary_settings['skip_confirm']) ? (string) $primary_settings['skip_confirm'] : 'yes';
+		$this->lifetime = isset($primary_settings['lifetime']) ? (string) $primary_settings['lifetime'] : '';
+		$this->auto_complete = isset($primary_settings['auto_complete']) ? (string) $primary_settings['auto_complete'] : '1';
 		$this->language = 'en';
-		$this->description = $this->get_option('description');
-		$this->instructions = $this->get_option('instructions');
-		$this->detailed_logging = $this->get_option('detailed_logging', 'no');
+		$this->description = isset($gateway_settings['description']) ? (string) $gateway_settings['description'] : '';
+		$this->instructions = isset($gateway_settings['instructions']) ? (string) $gateway_settings['instructions'] : '';
+		$this->detailed_logging = isset($primary_settings['detailed_logging']) ? (string) $primary_settings['detailed_logging'] : 'no';
+		$this->integration_type = isset($gateway_settings['integration_type']) && $gateway_settings['integration_type'] === 'payment_method'
+			? 'payment_method'
+			: 'hosted_page';
+		$this->payment_method = self::sanitize_payment_method_id(isset($gateway_settings['payment_method']) ? $gateway_settings['payment_method'] : '');
 
-		//Actions
-		add_action('payop-ipn-request', [$this, 'successful_request']);
 		// Keep the hosted payment form only on the order-pay page to avoid reopening it after browser redirects.
 		add_action('woocommerce_receipt_' . $this->id, [$this, 'receipt_page']);
-
-		add_filter( 'woocommerce_order_needs_payment', [$this, 'prevent_payment_for_failed_orders'], 10, 3 );
-
-		// hide buttons "Buy again"
-		add_action('woocommerce_my_account_my_orders_actions', [$this, 'hide_pay_button_for_failed_orders'], 10, 2);
-		add_filter('render_block', [$this, 'modify_wc_order_confirmation_block_content'], 10, 2);
-
-		//Payment listner/API hook
 		add_action('woocommerce_api_wc_' . $this->id, [$this, 'check_ipn_response']);
-		add_action('payop_check_abandoned_payment', [$this, 'check_abandoned_payment']);
 
-		//Save options
-		add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
+		if ($this->is_primary_gateway()) {
+			// The primary callback URL handles IPN notifications for every Payop gateway instance.
+			add_action('payop-ipn-request', [$this, 'successful_request']);
+			add_filter('woocommerce_order_needs_payment', [$this, 'prevent_payment_for_failed_orders'], 10, 3);
+
+			// Hide buttons "Buy again".
+			add_action('woocommerce_my_account_my_orders_actions', [$this, 'hide_pay_button_for_failed_orders'], 10, 2);
+			add_filter('render_block', [$this, 'modify_wc_order_confirmation_block_content'], 10, 2);
+			add_action('payop_check_abandoned_payment', [$this, 'check_abandoned_payment']);
+		}
+
+		if ($this->is_primary_gateway()) {
+			add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
+		}
 
 		if (!$this->is_valid_for_use()) {
 			$this->enabled = false;
 		}
+	}
+
+	/**
+	 * Get the gateway ID for a human-readable gateway number.
+	 *
+	 * @param int $gateway_number
+	 * @return string
+	 */
+	public static function get_gateway_id($gateway_number)
+	{
+		$gateway_number = max(1, absint($gateway_number));
+		return $gateway_number === 1
+			? PAYOP_PAYMENT_GATEWAY_NAME
+			: PAYOP_PAYMENT_GATEWAY_NAME . '_' . $gateway_number;
+	}
+
+	/**
+	 * Get configured gateway numbers.
+	 *
+	 * @return int[]
+	 */
+	public static function get_configured_gateway_numbers()
+	{
+		$settings = (array) get_option('woocommerce_' . PAYOP_PAYMENT_GATEWAY_NAME . '_settings', []);
+		$gateway_numbers = [1];
+
+		foreach (self::get_payment_buttons($settings) as $button) {
+			$gateway_number = isset($button['gateway_number']) ? absint($button['gateway_number']) : 0;
+			if ($gateway_number >= 2 && !in_array($gateway_number, $gateway_numbers, true)) {
+				$gateway_numbers[] = $gateway_number;
+			}
+		}
+
+		return $gateway_numbers;
+	}
+
+	/**
+	 * Get additional button configurations from the primary settings.
+	 *
+	 * @param array|null $settings
+	 * @return array
+	 */
+	private static function get_payment_buttons($settings = null)
+	{
+		if ($settings === null) {
+			$settings = (array) get_option('woocommerce_' . PAYOP_PAYMENT_GATEWAY_NAME . '_settings', []);
+		}
+
+		if (isset($settings['payment_buttons']) && is_array($settings['payment_buttons'])) {
+			return array_values($settings['payment_buttons']);
+		}
+
+		// Migrate settings created by the early 3.2.0 development version.
+		$legacy_buttons = [];
+		$legacy_count = isset($settings['additional_gateways'])
+			? min(absint($settings['additional_gateways']), PAYOP_MAX_GATEWAY_INSTANCES - 1)
+			: 0;
+		for ($gateway_number = 2; $gateway_number <= $legacy_count + 1; ++$gateway_number) {
+			$legacy_settings = (array) get_option('woocommerce_' . self::get_gateway_id($gateway_number) . '_settings', []);
+			$legacy_buttons[] = [
+				'gateway_number' => $gateway_number,
+				'enabled' => isset($legacy_settings['enabled']) ? (string) $legacy_settings['enabled'] : 'no',
+				'title' => isset($legacy_settings['title']) ? (string) $legacy_settings['title'] : sprintf(__('Payop payment option #%d', 'payop-woocommerce'), $gateway_number),
+				'description' => isset($legacy_settings['description']) ? (string) $legacy_settings['description'] : '',
+				'integration_type' => isset($legacy_settings['integration_type']) ? (string) $legacy_settings['integration_type'] : 'payment_method',
+				'payment_method' => isset($legacy_settings['payment_method']) ? (string) $legacy_settings['payment_method'] : '',
+			];
+		}
+
+		return $legacy_buttons;
+	}
+
+	/**
+	 * Find one additional button configuration.
+	 *
+	 * @param int        $gateway_number
+	 * @param array|null $settings
+	 * @return array
+	 */
+	private static function get_button_configuration($gateway_number, $settings = null)
+	{
+		foreach (self::get_payment_buttons($settings) as $button) {
+			if (isset($button['gateway_number']) && absint($button['gateway_number']) === absint($gateway_number)) {
+				return is_array($button) ? $button : [];
+			}
+		}
+
+		return [];
+	}
+
+	/**
+	 * Get configured gateway IDs.
+	 *
+	 * @return string[]
+	 */
+	public static function get_configured_gateway_ids()
+	{
+		return array_map([__CLASS__, 'get_gateway_id'], self::get_configured_gateway_numbers());
+	}
+
+	/**
+	 * Check whether an ID belongs to a Payop gateway instance.
+	 *
+	 * @param string $gateway_id
+	 * @return bool
+	 */
+	public static function is_payop_gateway_id($gateway_id)
+	{
+		return (bool) preg_match(
+			'/^' . preg_quote(PAYOP_PAYMENT_GATEWAY_NAME, '/') . '(?:_(?:[2-9]|[1-9][0-9]+))?$/',
+			(string) $gateway_id
+		);
+	}
+
+	/**
+	 * Normalize a Payop payment method ID.
+	 *
+	 * @param mixed $payment_method
+	 * @return string
+	 */
+	private static function sanitize_payment_method_id($payment_method)
+	{
+		if (!is_scalar($payment_method)) {
+			return '';
+		}
+
+		$payment_method = trim((string) $payment_method);
+		return preg_match('/^[1-9][0-9]*$/', $payment_method) ? $payment_method : '';
+	}
+
+	/**
+	 * Get the human-readable gateway number.
+	 *
+	 * @return int
+	 */
+	public function get_gateway_number()
+	{
+		return $this->gateway_number;
+	}
+
+	/**
+	 * Check whether this is the primary Payop gateway.
+	 *
+	 * @return bool
+	 */
+	public function is_primary_gateway()
+	{
+		return $this->gateway_number === 1;
+	}
+
+	/**
+	 * Check whether an order was created with any Payop gateway instance.
+	 *
+	 * @param WC_Order|mixed $order
+	 * @return bool
+	 */
+	private function order_uses_payop($order)
+	{
+		return $order instanceof WC_Order && self::is_payop_gateway_id($order->get_payment_method());
+	}
+
+	/**
+	 * Return the Payment Method ID fixed on the order at checkout.
+	 *
+	 * @param WC_Order $order
+	 * @return string
+	 */
+	private function get_order_payment_method_id($order)
+	{
+		$stored_payment_method = self::sanitize_payment_method_id($order->get_meta(PAYOP_PAYMENT_METHOD_ID_META));
+		if ($stored_payment_method !== '') {
+			return $stored_payment_method;
+		}
+
+		return $this->integration_type === 'payment_method' ? $this->payment_method : '';
+	}
+
+	/**
+	 * Normalize an invoice identifier received from order metadata or Payop.
+	 *
+	 * @param mixed $invoice_id
+	 * @return string
+	 */
+	private function sanitize_invoice_id($invoice_id)
+	{
+		if (!is_scalar($invoice_id)) {
+			return '';
+		}
+
+		return sanitize_text_field(trim((string) $invoice_id));
+	}
+
+	/**
+	 * Return the invoice history stored for an order.
+	 *
+	 * @param WC_Order $order
+	 * @return array
+	 */
+	private function get_payop_invoice_history($order)
+	{
+		$history = $order instanceof WC_Order ? $order->get_meta(PAYOP_INVOICE_HISTORY_META) : [];
+		if (!is_array($history)) {
+			return [];
+		}
+
+		$normalized_history = [];
+		foreach ($history as $entry) {
+			if (!is_array($entry)) {
+				continue;
+			}
+
+			$invoice_id = $this->sanitize_invoice_id(isset($entry['invoice_id']) ? $entry['invoice_id'] : '');
+			if ($invoice_id === '') {
+				continue;
+			}
+
+			$normalized_history[$invoice_id] = [
+				'invoice_id' => $invoice_id,
+				'gateway_id' => isset($entry['gateway_id']) ? sanitize_key((string) $entry['gateway_id']) : '',
+				'payment_method_id' => self::sanitize_payment_method_id(isset($entry['payment_method_id']) ? $entry['payment_method_id'] : ''),
+				'created_at' => isset($entry['created_at']) ? absint($entry['created_at']) : 0,
+			];
+		}
+
+		return array_values($normalized_history);
+	}
+
+	/**
+	 * Add an invoice and its immutable checkout context to the order history.
+	 *
+	 * @param WC_Order $order
+	 * @param string   $invoice_id
+	 * @param string   $gateway_id
+	 * @param string   $payment_method_id
+	 * @return void
+	 */
+	private function remember_payop_invoice($order, $invoice_id, $gateway_id, $payment_method_id)
+	{
+		if (!$order instanceof WC_Order) {
+			return;
+		}
+
+		$invoice_id = $this->sanitize_invoice_id($invoice_id);
+		if ($invoice_id === '') {
+			return;
+		}
+
+		$history = $this->get_payop_invoice_history($order);
+		$entry = [
+			'invoice_id' => $invoice_id,
+			'gateway_id' => sanitize_key((string) $gateway_id),
+			'payment_method_id' => self::sanitize_payment_method_id($payment_method_id),
+			'created_at' => time(),
+		];
+		$replaced = false;
+
+		foreach ($history as $index => $history_entry) {
+			if ($history_entry['invoice_id'] === $invoice_id) {
+				$entry['created_at'] = !empty($history_entry['created_at']) ? $history_entry['created_at'] : $entry['created_at'];
+				$history[$index] = $entry;
+				$replaced = true;
+				break;
+			}
+		}
+
+		if (!$replaced) {
+			$history[] = $entry;
+		}
+
+		$order->update_meta_data(PAYOP_INVOICE_HISTORY_META, $history);
+		$order->update_meta_data(PAYOP_INVOICE_CONTEXT_META, $entry);
+	}
+
+	/**
+	 * Find immutable context for a known invoice.
+	 *
+	 * @param WC_Order $order
+	 * @param string   $invoice_id
+	 * @return array
+	 */
+	private function get_payop_invoice_context($order, $invoice_id)
+	{
+		$invoice_id = $this->sanitize_invoice_id($invoice_id);
+		if ($invoice_id === '') {
+			return [];
+		}
+
+		$current_context = $order instanceof WC_Order ? $order->get_meta(PAYOP_INVOICE_CONTEXT_META) : [];
+		if (is_array($current_context) && $this->sanitize_invoice_id(isset($current_context['invoice_id']) ? $current_context['invoice_id'] : '') === $invoice_id) {
+			return $current_context;
+		}
+
+		foreach ($this->get_payop_invoice_history($order) as $entry) {
+			if ($entry['invoice_id'] === $invoice_id) {
+				return $entry;
+			}
+		}
+
+		return [];
+	}
+
+	/**
+	 * Check that an invoice was created by this plugin for the order.
+	 *
+	 * @param WC_Order $order
+	 * @param string   $invoice_id
+	 * @return bool
+	 */
+	private function is_known_payop_invoice($order, $invoice_id)
+	{
+		$invoice_id = $this->sanitize_invoice_id($invoice_id);
+		if (!$order instanceof WC_Order || $invoice_id === '') {
+			return false;
+		}
+
+		$current_invoice_id = $this->sanitize_invoice_id($order->get_meta(PAYOP_INVOICE_ID_META));
+		if ($current_invoice_id !== '' && hash_equals($current_invoice_id, $invoice_id)) {
+			return true;
+		}
+
+		return !empty($this->get_payop_invoice_context($order, $invoice_id));
+	}
+
+	/**
+	 * Invalidate only the current redirect invoice when checkout selection changes.
+	 *
+	 * The old identifier remains in the immutable history for secure IPN checks.
+	 *
+	 * @param WC_Order $order
+	 * @param string   $gateway_id
+	 * @param string   $payment_method_id
+	 * @return bool Whether an existing invoice was invalidated.
+	 */
+	private function reset_invoice_for_changed_selection($order, $gateway_id, $payment_method_id)
+	{
+		if (!$order instanceof WC_Order) {
+			return false;
+		}
+
+		$current_invoice_id = $this->sanitize_invoice_id($order->get_meta(PAYOP_INVOICE_ID_META));
+		if ($current_invoice_id === '') {
+			$current_invoice_id = $this->sanitize_invoice_id($order->get_meta(PAYOP_INVITATE_RESPONSE));
+		}
+		if ($current_invoice_id === '') {
+			return false;
+		}
+
+		$current_context = $this->get_payop_invoice_context($order, $current_invoice_id);
+		$gateway_id = sanitize_key((string) $gateway_id);
+		$payment_method_id = self::sanitize_payment_method_id($payment_method_id);
+		$context_matches = !empty($current_context)
+			&& isset($current_context['gateway_id'], $current_context['payment_method_id'])
+			&& sanitize_key((string) $current_context['gateway_id']) === $gateway_id
+			&& self::sanitize_payment_method_id($current_context['payment_method_id']) === $payment_method_id;
+
+		if ($context_matches) {
+			return false;
+		}
+
+		// Preserve legacy invoices in history even if they predate invoice context metadata.
+		if (empty($current_context)) {
+			$this->remember_payop_invoice(
+				$order,
+				$current_invoice_id,
+				'',
+				$order->get_meta(PAYOP_PAYMENT_METHOD_ID_META)
+			);
+		}
+
+		$order->delete_meta_data(PAYOP_INVITATE_RESPONSE);
+		$order->delete_meta_data(PAYOP_INVOICE_ID_META);
+		$order->delete_meta_data(PAYOP_INVOICE_CONTEXT_META);
+		$order->delete_meta_data(PAYOP_TXID_META);
+
+		$this->add_payop_order_note(
+			$order,
+			__('Payop payment option changed; creating a new invoice', 'payop-woocommerce'),
+			[
+				'previous_invoice_id' => $current_invoice_id,
+				'gateway_id' => $gateway_id,
+				'payment_method_id' => $payment_method_id,
+			]
+		);
+
+		return true;
 	}
 
 	/**
@@ -150,6 +603,34 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		$order = wc_get_order($order_id);
 
 		$response = $order->get_meta(PAYOP_INVITATE_RESPONSE);
+		if ($response && $this->is_payop_invoice_overdue($response)) {
+			if (!$this->is_known_payop_invoice($order, $response)) {
+				$this->remember_payop_invoice(
+					$order,
+					$response,
+					$order->get_payment_method(),
+					$this->get_order_payment_method_id($order)
+				);
+			}
+			$this->add_payop_order_note(
+				$order,
+				__('Stored Payop invoice is overdue; creating a replacement invoice', 'payop-woocommerce'),
+				['invoice_id' => (string) $response]
+			);
+			$this->log_payop(
+				'warning',
+				'Stored Payop invoice is overdue; creating a replacement invoice',
+				['invoice_id' => (string) $response],
+				$order
+			);
+			$order->delete_meta_data(PAYOP_INVITATE_RESPONSE);
+			$order->delete_meta_data(PAYOP_INVOICE_ID_META);
+			$order->delete_meta_data(PAYOP_INVOICE_CONTEXT_META);
+			$order->delete_meta_data(PAYOP_TXID_META);
+			$order->save_meta_data();
+			$response = false;
+		}
+
 		if ( !$response ) {
 			$out_summ = number_format($order->get_total(), 4, '.', '');
 			$currency = $order->get_currency();
@@ -193,10 +674,17 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				'signature' => $signature
 			];
 
+			$payment_method = $this->get_order_payment_method_id($order);
+			if ($payment_method !== '') {
+				$arr_data['paymentMethod'] = $payment_method;
+			}
+
 			$invoice_details = [
 				'order_id' => $order->get_id(),
 				'amount' => $out_summ,
 				'currency' => $currency,
+				'gateway_id' => $order->get_payment_method(),
+				'payment_method_id' => $payment_method,
 			];
 			$this->add_payop_order_note($order, __('Payop invoice creation requested', 'payop-woocommerce'), $invoice_details);
 			$this->log_payop('info', 'Payop invoice creation requested', $invoice_details, $order);
@@ -218,8 +706,9 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 
 			$response = sanitize_text_field((string) $response);
 			// $response is the invoice identifier returned in the response header.
-			$order->add_meta_data(PAYOP_INVITATE_RESPONSE, $response);
-			$order->add_meta_data(PAYOP_INVOICE_ID_META, $response);
+			$order->update_meta_data(PAYOP_INVITATE_RESPONSE, $response);
+			$order->update_meta_data(PAYOP_INVOICE_ID_META, $response);
+			$this->remember_payop_invoice($order, $response, $this->id, $payment_method);
 			$order->save_meta_data();
 			$invoice_details['invoice_id'] = $response;
 			$this->add_payop_order_note($order, __('Payop invoice created', 'payop-woocommerce'), $invoice_details);
@@ -367,7 +856,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			return;
 		}
 
-		$context = ['source' => PAYOP_PAYMENT_GATEWAY_NAME];
+		$context = ['source' => $this->id];
 		if ($order instanceof WC_Order) {
 			$context['order_id'] = $order->get_id();
 		}
@@ -438,7 +927,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	public function check_abandoned_payment($order_id)
 	{
 		$order = wc_get_order(absint($order_id));
-		if (!$order instanceof WC_Order || $order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+		if (!$this->order_uses_payop($order)) {
 			return;
 		}
 
@@ -552,6 +1041,28 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Check whether a stored invoice can no longer be opened by Payop Checkout.
+	 *
+	 * @param string $invoice_id
+	 * @return bool
+	 */
+	private function is_payop_invoice_overdue($invoice_id)
+	{
+		$invoice = $this->fetch_payop_invoice_details($invoice_id);
+		if (!empty($invoice['ok'])) {
+			return !empty($invoice['is_overdue']) || (isset($invoice['status']) && (int) $invoice['status'] === 2);
+		}
+
+		if (isset($invoice['http']) && (int) $invoice['http'] === 422 && !empty($invoice['body'])) {
+			$body = json_decode((string) $invoice['body'], true);
+			$message = is_array($body) && isset($body['message']) ? strtolower((string) $body['message']) : '';
+			return strpos($message, 'overdue') !== false;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Confirm payment against Payop's invoice API before changing order status.
 	 *
 	 * @param WC_Order $order
@@ -564,22 +1075,25 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			return ['ok' => false, 'error' => 'Invalid order'];
 		}
 
-		if ($order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+		if (!$this->order_uses_payop($order)) {
 			return ['ok' => false, 'error' => 'Payment method mismatch'];
 		}
 
-		$expected_invoice_id = trim((string) $order->get_meta(PAYOP_INVOICE_ID_META));
-		$ipn_invoice_id = isset($posted_data['invoice']['id']) ? trim((string) $posted_data['invoice']['id']) : '';
+		$current_invoice_id = $this->sanitize_invoice_id($order->get_meta(PAYOP_INVOICE_ID_META));
+		$ipn_invoice_id = isset($posted_data['invoice']['id'])
+			? $this->sanitize_invoice_id($posted_data['invoice']['id'])
+			: '';
+		$invoice_id_to_check = $ipn_invoice_id !== '' ? $ipn_invoice_id : $current_invoice_id;
 
-		if ($expected_invoice_id === '') {
+		if ($invoice_id_to_check === '') {
 			return ['ok' => false, 'error' => 'Missing stored invoice id'];
 		}
 
-		if ($ipn_invoice_id !== '' && $ipn_invoice_id !== $expected_invoice_id) {
-			return ['ok' => false, 'error' => 'Invoice id mismatch'];
+		if (!$this->is_known_payop_invoice($order, $invoice_id_to_check)) {
+			return ['ok' => false, 'error' => 'Unknown invoice id'];
 		}
 
-		$invoice_check = $this->fetch_payop_invoice_details($expected_invoice_id);
+		$invoice_check = $this->fetch_payop_invoice_details($invoice_id_to_check);
 		if (empty($invoice_check['ok'])) {
 			return $invoice_check;
 		}
@@ -596,16 +1110,8 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			: '';
 		$invoice_currency = strtoupper((string) ($invoice_check['currency'] ?? ''));
 
-		if ($invoice_id === '' || $invoice_id !== $expected_invoice_id) {
+		if ($invoice_id === '' || $invoice_id !== $invoice_id_to_check) {
 			return ['ok' => false, 'error' => 'Payop invoice identifier mismatch', 'invoice_check' => $invoice_check];
-		}
-
-		if ($invoice_status !== 1) {
-			if (in_array($invoice_status, [2, 5], true)) {
-				return ['ok' => true, 'final' => true, 'state' => 'failed', 'invoice_check' => $invoice_check];
-			}
-
-			return ['ok' => true, 'final' => false, 'state' => 'pending', 'invoice_check' => $invoice_check];
 		}
 
 		if ($invoice_order_id === '' || $invoice_order_id !== $expected_order_id) {
@@ -620,7 +1126,35 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			return ['ok' => false, 'error' => 'Payop invoice currency mismatch', 'invoice_check' => $invoice_check];
 		}
 
-		return ['ok' => true, 'final' => true, 'state' => 'paid', 'invoice_check' => $invoice_check];
+		$is_current_invoice = $current_invoice_id !== '' && hash_equals($current_invoice_id, $invoice_id_to_check);
+
+		if ($invoice_status === 1) {
+			return [
+				'ok' => true,
+				'final' => true,
+				'state' => 'paid',
+				'is_current_invoice' => $is_current_invoice,
+				'invoice_check' => $invoice_check,
+			];
+		}
+
+		if (in_array($invoice_status, [2, 5], true)) {
+			return [
+				'ok' => true,
+				'final' => $is_current_invoice,
+				'state' => $is_current_invoice ? 'failed' : 'superseded',
+				'is_current_invoice' => $is_current_invoice,
+				'invoice_check' => $invoice_check,
+			];
+		}
+
+		return [
+			'ok' => true,
+			'final' => false,
+			'state' => 'pending',
+			'is_current_invoice' => $is_current_invoice,
+			'invoice_check' => $invoice_check,
+		];
 	}
 
 	/**
@@ -658,7 +1192,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			(string) $order->get_order_key(),
 		]);
 
-		return hash_hmac(PAYOP_HASH_ALGORITHM, $message, wp_salt('auth') . '|' . PAYOP_PAYMENT_GATEWAY_NAME);
+		return hash_hmac(PAYOP_HASH_ALGORITHM, $message, wp_salt('auth') . '|' . $order->get_payment_method());
 	}
 
 	/**
@@ -702,15 +1236,16 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			wp_die('Order not found', 'Order not found', 404);
 		}
 		// Prevent abusing our endpoint to manipulate non-Payop orders.
-		if ($order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+		if (!$this->order_uses_payop($order)) {
 			$this->log_payop('error', 'Payop request failed: payment method mismatch', [
 				'order_id' => $order->get_id(),
 				'payment_method' => $order->get_payment_method(),
 			], $order);
 			wp_die('Payment method mismatch', 'Forbidden', 403);
 		}
-		// Ensure this order actually created a Payop invoice via this plugin.
-		if (!$order->get_meta(PAYOP_INVOICE_ID_META)) {
+		// Ensure this order actually created at least one Payop invoice via this plugin.
+		$current_invoice_id = $this->sanitize_invoice_id($order->get_meta(PAYOP_INVOICE_ID_META));
+		if ($current_invoice_id === '' && empty($this->get_payop_invoice_history($order))) {
 			$this->add_payop_order_note($order, __('Payop request rejected: missing stored invoice id', 'payop-woocommerce'));
 			$this->log_payop('error', 'Payop request rejected: missing stored invoice id', [], $order);
 			wp_die('Missing Payop invoice', 'Forbidden', 403);
@@ -873,6 +1408,12 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 					}
 				}
 				wp_die('FAILED', 'FAILED', 200);
+			}
+
+			if ($state === 'superseded') {
+				$this->add_payop_order_note($order, __('Superseded Payop invoice is no longer active; order status was not changed', 'payop-woocommerce'), $confirmation_details);
+				$this->log_payop('info', 'Superseded Payop invoice is no longer active; order status was not changed', $confirmation_details, $order);
+				wp_die('SUPERSEDED', 'SUPERSEDED', 200);
 			}
 
 			$this->add_payop_order_note($order, __('Payop invoice is not paid yet; waiting for confirmation', 'payop-woocommerce'), $confirmation_details);
@@ -1053,7 +1594,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	 */
 	public function prevent_payment_for_failed_orders( $needs_payment, $order, $valid_order_statuses )
 	{
-		if ( $order->has_status( 'failed' ) && $order->get_payment_method() === PAYOP_PAYMENT_GATEWAY_NAME ) {
+		if ($order->has_status('failed') && $this->order_uses_payop($order)) {
 			$needs_payment = false;
 		}
 
@@ -1070,11 +1611,27 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	public function process_payment( $order_id )
 	{
 		$order = wc_get_order( $order_id );
+		$payment_method = $this->integration_type === 'payment_method' ? $this->payment_method : '';
+		$invoice_was_reset = false;
+
+		if ($order instanceof WC_Order) {
+			$invoice_was_reset = $this->reset_invoice_for_changed_selection($order, $this->id, $payment_method);
+			if ($payment_method !== '') {
+				$order->update_meta_data(PAYOP_PAYMENT_METHOD_ID_META, $payment_method);
+			} else {
+				$order->delete_meta_data(PAYOP_PAYMENT_METHOD_ID_META);
+			}
+			$order->save_meta_data();
+		}
+
 		$details = [
 			'order_id' => $order_id,
 			'amount' => $order ? number_format($order->get_total(), 4, '.', '') : '',
 			'currency' => $order ? $order->get_currency() : '',
 			'redirect' => $order ? $order->get_checkout_payment_url(true) : '',
+			'gateway_id' => $this->id,
+			'payment_method_id' => $payment_method,
+			'invoice_reset' => $invoice_was_reset ? 'yes' : 'no',
 		];
 
 		$this->add_payop_order_note($order, __('Payop payment initiated at checkout', 'payop-woocommerce'), $details);
@@ -1112,7 +1669,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 				if (!$order) {
 					return 'Order not found';
 				}
-				if ($order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+				if (!$this->order_uses_payop($order)) {
 					return 'Payment method mismatch';
 				}
 				$currency = $order->get_currency();
@@ -1157,7 +1714,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		if (!$order) {
 			return 'Order not found';
 		}
-		if ($order->get_payment_method() !== PAYOP_PAYMENT_GATEWAY_NAME) {
+		if (!$this->order_uses_payop($order)) {
 			return 'Payment method mismatch';
 		}
 		$state = isset($posted['transaction']['state']) ? intval($posted['transaction']['state']) : null;
@@ -1169,12 +1726,13 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			return 'State is not valid';
 		}
 
-		// Bind invoice id: must match what we created for this order.
-		$expected_invoice_id = (string) $order->get_meta(PAYOP_INVOICE_ID_META);
-		if ($expected_invoice_id === '') {
+		// Bind invoice id: it must be the current invoice or a superseded invoice
+		// that was previously created by this plugin for the same order.
+		$invoice_id = $this->sanitize_invoice_id($invoice_id);
+		if ($invoice_id === '') {
 			return 'Missing stored invoice id';
 		}
-		if ((string) $invoice_id !== $expected_invoice_id) {
+		if (!$this->is_known_payop_invoice($order, $invoice_id)) {
 			return 'Invoice id mismatch';
 		}
 
@@ -1287,27 +1845,528 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Hide incomplete Payment Method ID integrations from checkout.
+	 *
+	 * @return bool
+	 */
+	public function is_available()
+	{
+		if ($this->integration_type === 'payment_method' && $this->payment_method === '') {
+			return false;
+		}
+
+		return parent::is_available();
+	}
+
+	/**
+	 * Get selectable payment methods for the settings page.
+	 *
+	 * @return array
+	 */
+	public function get_payment_method_options()
+	{
+		$options = ['' => __('Select a payment method', 'payop-woocommerce')];
+		$settings = (array) get_option('woocommerce_' . PAYOP_PAYMENT_GATEWAY_NAME . '_settings', []);
+
+		if ($this->is_payop_settings_request()) {
+			foreach ($this->load_available_payment_methods($settings) as $payment_method) {
+				$options[$payment_method['identifier']] = sprintf(
+					'%s (ID: %s%s)',
+					$payment_method['title'],
+					$payment_method['identifier'],
+					$payment_method['currencies'] !== '' ? '; ' . $payment_method['currencies'] : ''
+				);
+			}
+		}
+
+		$saved_payment_methods = [];
+		if (!empty($settings['payment_method'])) {
+			$saved_payment_methods[] = self::sanitize_payment_method_id($settings['payment_method']);
+		}
+		foreach (self::get_payment_buttons($settings) as $button) {
+			if (!empty($button['payment_method'])) {
+				$saved_payment_methods[] = self::sanitize_payment_method_id($button['payment_method']);
+			}
+		}
+
+		foreach (array_unique(array_filter($saved_payment_methods)) as $payment_method_id) {
+			if (!isset($options[$payment_method_id])) {
+				$options[$payment_method_id] = sprintf(
+					__('Saved payment method (ID: %s)', 'payop-woocommerce'),
+					$payment_method_id
+				);
+			}
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Check whether the current request renders the primary Payop settings.
+	 *
+	 * @return bool
+	 */
+	private function is_payop_settings_request()
+	{
+		if (!is_admin()) {
+			return false;
+		}
+
+		$page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
+		$section = isset($_GET['section']) ? sanitize_key(wp_unslash($_GET['section'])) : '';
+
+		return $page === 'wc-settings' && $tab === 'checkout' && $section === PAYOP_PAYMENT_GATEWAY_NAME;
+	}
+
+	/**
+	 * Load and cache payment methods available to the configured Payop project.
+	 *
+	 * @param array $settings
+	 * @return array
+	 */
+	private function load_available_payment_methods(array $settings)
+	{
+		if (is_array($this->available_payment_methods)) {
+			return $this->available_payment_methods;
+		}
+
+		$this->available_payment_methods = [];
+		$public_key = isset($settings['public_key']) ? trim((string) $settings['public_key']) : '';
+		$jwt_token = isset($settings['jwt_token']) ? trim((string) $settings['jwt_token']) : '';
+
+		if ($public_key === '' || $jwt_token === '') {
+			$this->available_payment_methods_error = __('Save the Public key and JWT Token to load available payment methods.', 'payop-woocommerce');
+			return [];
+		}
+
+		$application_id = preg_replace('/^application-/', '', $public_key);
+		if ($application_id === '') {
+			$this->available_payment_methods_error = __('The Public key does not contain a valid application ID.', 'payop-woocommerce');
+			return [];
+		}
+
+		$cache_key = 'payop_methods_' . md5($public_key . '|' . $jwt_token);
+		$cached_methods = get_transient($cache_key);
+		if (is_array($cached_methods)) {
+			$this->available_payment_methods = $cached_methods;
+			return $cached_methods;
+		}
+
+		$response = wp_remote_get(
+			'https://api.payop.com/v1/instrument-settings/payment-methods/available-for-application/' . rawurlencode($application_id),
+			[
+				'sslverify' => true,
+				'timeout' => 20,
+				'headers' => [
+					'Accept' => 'application/json',
+					'Content-Type' => 'application/json',
+					'Authorization' => 'Bearer ' . $jwt_token,
+				],
+			]
+		);
+
+		if (is_wp_error($response)) {
+			$this->available_payment_methods_error = sprintf(
+				__('Unable to load Payop payment methods: %s', 'payop-woocommerce'),
+				$response->get_error_message()
+			);
+			return [];
+		}
+
+		$status_code = (int) wp_remote_retrieve_response_code($response);
+		$response_data = json_decode((string) wp_remote_retrieve_body($response), true);
+		if ($status_code !== 200 || !is_array($response_data) || empty($response_data['data']) || !is_array($response_data['data'])) {
+			$message = is_array($response_data) && !empty($response_data['message'])
+				? sanitize_text_field((string) $response_data['message'])
+				: __('Unexpected API response.', 'payop-woocommerce');
+			$this->available_payment_methods_error = sprintf(
+				__('Unable to load Payop payment methods: %s', 'payop-woocommerce'),
+				$message
+			);
+			return [];
+		}
+
+		foreach ($response_data['data'] as $payment_method) {
+			$identifier = isset($payment_method['identifier'])
+				? self::sanitize_payment_method_id($payment_method['identifier'])
+				: '';
+			if ($identifier === '') {
+				continue;
+			}
+
+			$currencies = isset($payment_method['currencies']) && is_array($payment_method['currencies'])
+				? implode(', ', array_map('sanitize_text_field', $payment_method['currencies']))
+				: '';
+			$this->available_payment_methods[] = [
+				'identifier' => $identifier,
+				'title' => isset($payment_method['title']) ? sanitize_text_field((string) $payment_method['title']) : $identifier,
+				'currencies' => $currencies,
+			];
+		}
+
+		set_transient($cache_key, $this->available_payment_methods, 5 * MINUTE_IN_SECONDS);
+		return $this->available_payment_methods;
+	}
+
+	/**
+	 * Render the additional payment buttons repeater.
+	 *
+	 * @param string $key
+	 * @param array  $data
+	 * @return string
+	 */
+	public function generate_payop_buttons_html($key, $data)
+	{
+		$field_key = $this->get_field_key($key);
+		$buttons = $this->get_option($key, []);
+		$buttons = is_array($buttons) ? array_values($buttons) : [];
+		$method_options = $this->get_payment_method_options();
+		$can_add_buttons = count($method_options) > 1;
+		$next_gateway_number = 2;
+
+		foreach ($buttons as $button) {
+			$next_gateway_number = max($next_gateway_number, absint(isset($button['gateway_number']) ? $button['gateway_number'] : 0) + 1);
+		}
+
+		$template = $this->get_payment_button_row_html(
+			'__INDEX__',
+			[
+				'gateway_number' => '__NUMBER__',
+				'enabled' => 'yes',
+				'title' => '',
+				'description' => __('Accept online payments using Payop.com', 'payop-woocommerce'),
+				'integration_type' => 'payment_method',
+				'payment_method' => '',
+			],
+			$method_options
+		);
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label><?php echo esc_html($data['title']); ?></label>
+			</th>
+			<td class="forminp">
+				<p class="description"><?php echo wp_kses_post($data['description']); ?></p>
+				<?php if ($this->available_payment_methods_error !== '') : ?>
+					<div class="notice notice-warning inline"><p><?php echo esc_html($this->available_payment_methods_error); ?></p></div>
+				<?php endif; ?>
+				<div class="payop-payment-buttons-wrap">
+				<table class="widefat striped" id="payop-payment-buttons">
+					<thead>
+						<tr>
+							<th><?php esc_html_e('Enabled', 'payop-woocommerce'); ?></th>
+							<th><?php esc_html_e('Checkout name', 'payop-woocommerce'); ?></th>
+							<th><?php esc_html_e('Description', 'payop-woocommerce'); ?></th>
+							<th><?php esc_html_e('Integration type', 'payop-woocommerce'); ?></th>
+							<th><?php esc_html_e('Payment method', 'payop-woocommerce'); ?></th>
+							<th><?php esc_html_e('Actions', 'payop-woocommerce'); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						foreach ($buttons as $index => $button) {
+							echo $this->get_payment_button_row_html($index, $button, $method_options); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						}
+						?>
+					</tbody>
+				</table>
+				</div>
+				<p>
+					<button
+						type="button"
+						class="button button-secondary"
+						id="payop-add-payment-button"
+						<?php disabled(!$can_add_buttons); ?>
+					>
+						<?php esc_html_e('Add payment button', 'payop-woocommerce'); ?>
+					</button>
+				</p>
+				<?php if (!$can_add_buttons) : ?>
+					<p class="description"><?php esc_html_e('Save a valid Public key and JWT Token before adding payment buttons.', 'payop-woocommerce'); ?></p>
+				<?php endif; ?>
+			</td>
+		</tr>
+		<script>
+			jQuery(function($) {
+				const tableBody = $('#payop-payment-buttons tbody');
+				const rowTemplate = <?php echo wp_json_encode($template); ?>;
+				let nextIndex = <?php echo absint(count($buttons)); ?>;
+				let nextGatewayNumber = <?php echo absint($next_gateway_number); ?>;
+
+				function toggleRowPaymentMethod(row) {
+					const integrationType = row.find('.payop-button-integration-type').val();
+					const paymentMethod = row.find('.payop-button-payment-method');
+					paymentMethod.closest('td').toggle(integrationType === 'payment_method');
+					paymentMethod.prop('required', integrationType === 'payment_method');
+				}
+
+				$('#payop-add-payment-button').on('click', function() {
+					const rowHtml = rowTemplate
+						.split('__INDEX__').join(nextIndex++)
+						.split('__NUMBER__').join(nextGatewayNumber++);
+					const row = $(rowHtml);
+					tableBody.append(row);
+					toggleRowPaymentMethod(row);
+				});
+
+				tableBody.on('click', '.payop-remove-payment-button', function() {
+					$(this).closest('tr').remove();
+				});
+
+				tableBody.on('change', '.payop-button-integration-type', function() {
+					toggleRowPaymentMethod($(this).closest('tr'));
+				});
+
+				tableBody.on('change', '.payop-button-payment-method', function() {
+					const row = $(this).closest('tr');
+					const title = row.find('input[type="text"]');
+					if (title.val().trim() === '' && $(this).val() !== '') {
+						title.val($(this).find('option:selected').text().replace(/\s+\(ID:.*$/, '').trim());
+					}
+				});
+
+				tableBody.find('tr').each(function() {
+					toggleRowPaymentMethod($(this));
+				});
+			});
+		</script>
+		<style>
+			.payop-payment-buttons-wrap {
+				margin-top: 12px;
+				overflow-x: auto;
+			}
+
+			#payop-payment-buttons {
+				min-width: 1000px;
+			}
+
+			#payop-payment-buttons th,
+			#payop-payment-buttons td {
+				padding: 12px 16px;
+				vertical-align: middle;
+			}
+
+			#payop-payment-buttons input[type="text"],
+			#payop-payment-buttons textarea,
+			#payop-payment-buttons select {
+				box-sizing: border-box;
+				width: 100%;
+			}
+		</style>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Render one repeater row.
+	 *
+	 * @param int|string $index
+	 * @param array      $button
+	 * @param array      $method_options
+	 * @return string
+	 */
+	private function get_payment_button_row_html($index, array $button, array $method_options)
+	{
+		$field_key = $this->get_field_key('payment_buttons') . '[' . $index . ']';
+		$gateway_number = isset($button['gateway_number']) ? (string) $button['gateway_number'] : '';
+		$enabled = isset($button['enabled']) && $button['enabled'] === 'yes';
+		$title = isset($button['title']) ? (string) $button['title'] : '';
+		$description = isset($button['description']) ? (string) $button['description'] : '';
+		$integration_type = isset($button['integration_type']) && $button['integration_type'] === 'payment_method'
+			? 'payment_method'
+			: 'hosted_page';
+		$payment_method = isset($button['payment_method']) ? self::sanitize_payment_method_id($button['payment_method']) : '';
+
+		ob_start();
+		?>
+		<tr class="payop-payment-button-row">
+			<td>
+				<input type="hidden" name="<?php echo esc_attr($field_key . '[gateway_number]'); ?>" value="<?php echo esc_attr($gateway_number); ?>">
+				<input type="hidden" name="<?php echo esc_attr($field_key . '[enabled]'); ?>" value="no">
+				<input type="checkbox" name="<?php echo esc_attr($field_key . '[enabled]'); ?>" value="yes" <?php checked($enabled); ?>>
+			</td>
+			<td>
+				<input type="text" class="input-text" name="<?php echo esc_attr($field_key . '[title]'); ?>" value="<?php echo esc_attr($title); ?>" required>
+			</td>
+			<td>
+				<textarea name="<?php echo esc_attr($field_key . '[description]'); ?>" rows="2"><?php echo esc_textarea($description); ?></textarea>
+			</td>
+			<td>
+				<select class="payop-button-integration-type" name="<?php echo esc_attr($field_key . '[integration_type]'); ?>">
+					<option value="hosted_page" <?php selected($integration_type, 'hosted_page'); ?>><?php esc_html_e('Hosted Page', 'payop-woocommerce'); ?></option>
+					<option value="payment_method" <?php selected($integration_type, 'payment_method'); ?>><?php esc_html_e('Hosted Page with Payment Method ID', 'payop-woocommerce'); ?></option>
+				</select>
+			</td>
+			<td>
+				<select class="payop-button-payment-method" name="<?php echo esc_attr($field_key . '[payment_method]'); ?>">
+					<?php foreach ($method_options as $method_id => $method_title) : ?>
+						<option value="<?php echo esc_attr($method_id); ?>" <?php selected($payment_method, (string) $method_id); ?>>
+							<?php echo esc_html($method_title); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</td>
+			<td>
+				<button type="button" class="button-link-delete payop-remove-payment-button"><?php esc_html_e('Remove', 'payop-woocommerce'); ?></button>
+			</td>
+		</tr>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Validate additional payment button settings.
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 * @return array
+	 */
+	public function validate_payment_buttons_field($key, $value)
+	{
+		if (!is_array($value)) {
+			return [];
+		}
+
+		$buttons = [];
+		$used_gateway_numbers = [1];
+		$next_gateway_number = 2;
+
+		foreach (array_slice($value, 0, PAYOP_MAX_GATEWAY_INSTANCES - 1) as $button) {
+			if (!is_array($button)) {
+				continue;
+			}
+
+			$gateway_number = isset($button['gateway_number']) ? absint($button['gateway_number']) : 0;
+			if ($gateway_number < 2 || in_array($gateway_number, $used_gateway_numbers, true)) {
+				while (in_array($next_gateway_number, $used_gateway_numbers, true)) {
+					++$next_gateway_number;
+				}
+				$gateway_number = $next_gateway_number;
+			}
+			$used_gateway_numbers[] = $gateway_number;
+			$next_gateway_number = max($next_gateway_number, $gateway_number + 1);
+
+			$integration_type = isset($button['integration_type']) && $button['integration_type'] === 'payment_method'
+				? 'payment_method'
+				: 'hosted_page';
+			$payment_method = isset($button['payment_method'])
+				? self::sanitize_payment_method_id($button['payment_method'])
+				: '';
+			$title = isset($button['title']) ? sanitize_text_field(wp_unslash($button['title'])) : '';
+
+			if ($title === '') {
+				$this->add_error(__('Every additional Payop payment button must have a checkout name.', 'payop-woocommerce'));
+				continue;
+			}
+
+			if ($integration_type === 'payment_method' && $payment_method === '') {
+				$this->add_error(
+					sprintf(
+						__('Select a payment method for the “%s” Payop button.', 'payop-woocommerce'),
+						$title
+					)
+				);
+				continue;
+			}
+
+			$buttons[] = [
+				'gateway_number' => $gateway_number,
+				'enabled' => isset($button['enabled']) && $button['enabled'] === 'yes' ? 'yes' : 'no',
+				'title' => $title,
+				'description' => isset($button['description']) ? sanitize_textarea_field(wp_unslash($button['description'])) : '',
+				'integration_type' => $integration_type,
+				'payment_method' => $integration_type === 'payment_method' ? $payment_method : '',
+			];
+		}
+
+		return $buttons;
+	}
+
+	/**
+	 * Save and normalize gateway-specific settings.
+	 *
+	 * @return bool
+	 */
+	public function process_admin_options()
+	{
+		$saved = parent::process_admin_options();
+		$settings = (array) get_option($this->get_option_key(), []);
+
+		$settings['integration_type'] = isset($settings['integration_type']) && $settings['integration_type'] === 'payment_method'
+			? 'payment_method'
+			: 'hosted_page';
+		$settings['payment_method'] = isset($settings['payment_method'])
+			? self::sanitize_payment_method_id($settings['payment_method'])
+			: '';
+
+		if ($settings['integration_type'] === 'payment_method' && $settings['payment_method'] === '') {
+			$this->add_error(
+				__('Select a payment method when Hosted Page with Payment Method ID is selected. The primary Payop option will stay hidden at checkout until a method is selected.', 'payop-woocommerce')
+			);
+		}
+
+		unset($settings['additional_gateways']);
+		update_option($this->get_option_key(), $settings);
+		$this->settings = $settings;
+
+		return $saved;
+	}
+
+	/**
 	 * Admin Panel Options.
 	 *
 	 * Options for bits like 'title' and availability on a country-by-country basis.
 	 */
 	public function admin_options()
 	{
+		$this->display_errors();
 		?>
-		<h3><?php _e('Payop', 'payop-woocommerce'); ?></h3>
-		<p><?php _e('Take payments via Payop.', 'payop-woocommerce'); ?></p>
+		<h3><?php echo esc_html($this->method_title); ?></h3>
+		<p><?php echo esc_html($this->method_description); ?></p>
 
-		<?php if ($this->is_valid_for_use()) : ?>
-
-			<table class="form-table">
+		<?php if (!$this->is_primary_gateway()) : ?>
+			<p>
 				<?php
-				// Generate the HTML For the settings form.
-				$this->generate_settings_html();
+				printf(
+					/* translators: %s: URL to the primary Payop gateway settings. */
+					wp_kses_post(__('This option is configured in the <a href="%s">primary Payop gateway settings</a>.', 'payop-woocommerce')),
+					esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=' . PAYOP_PAYMENT_GATEWAY_NAME))
+				);
 				?>
-			</table>
-
-		<?php
+			</p>
+			<?php
+			return;
 		endif;
+		?>
+
+		<table class="form-table">
+			<?php
+			// Generate the HTML For the settings form.
+			$this->generate_settings_html();
+			?>
+		</table>
+		<script>
+			jQuery(function($) {
+				const integrationType = $(<?php echo wp_json_encode('#' . $this->get_field_key('integration_type')); ?>);
+				const paymentMethod = $(<?php echo wp_json_encode('#' . $this->get_field_key('payment_method')); ?>);
+				const paymentMethodRow = paymentMethod.closest('tr');
+
+				function togglePaymentMethodField() {
+					const requiresPaymentMethod = integrationType.val() === 'payment_method';
+					paymentMethodRow.toggle(requiresPaymentMethod);
+					paymentMethod.prop('required', requiresPaymentMethod);
+				}
+
+				integrationType.on('change', togglePaymentMethodField);
+				togglePaymentMethodField();
+			});
+		</script>
+		<?php
 	}
 
 	/**
@@ -1347,7 +2406,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	 */
 	public function hide_pay_button_for_failed_orders( $actions, $order )
 	{
-		if ( $order->get_status() === 'failed' ) {
+		if ($order->get_status() === 'failed' && $this->order_uses_payop($order)) {
 			unset( $actions['pay'] );
 		}
 

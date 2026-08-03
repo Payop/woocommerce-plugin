@@ -2,7 +2,7 @@
 /**
  * Settings for Payop Standard Gateway.
  *
- * @version 1.0.3
+ * @version 1.2.0
  */
 
 if (!defined('ABSPATH')) {
@@ -40,9 +40,48 @@ return [
 
 	'secret_key' => [
 		'title' => __('Secret key', 'payop-woocommerce'),
-		'type' => 'text',
+		'type' => 'password',
 		'description' => __('Issued in the client panel https://payop.com', 'payop-woocommerce'),
 		'default' => '',
+		'custom_attributes' => [
+			'autocomplete' => 'new-password',
+		],
+	],
+
+	'jwt_token' => [
+		'title' => __('JWT Token', 'payop-woocommerce'),
+		'type' => 'password',
+		'description' => __('Required only to load the payment methods available to your Payop project and configure additional checkout buttons.', 'payop-woocommerce'),
+		'default' => '',
+		'custom_attributes' => [
+			'autocomplete' => 'new-password',
+		],
+	],
+
+	'integration_type' => [
+		'title' => __('Integration type', 'payop-woocommerce'),
+		'type' => 'select',
+		'description' => __('Choose Hosted Page to show all available methods on Payop, or Hosted Page with Payment Method ID to open one specific method.', 'payop-woocommerce'),
+		'default' => 'hosted_page',
+		'options' => [
+			'hosted_page' => __('Hosted Page', 'payop-woocommerce'),
+			'payment_method' => __('Hosted Page with Payment Method ID', 'payop-woocommerce'),
+		],
+	],
+
+	'payment_method' => [
+		'title' => __('Payment method', 'payop-woocommerce'),
+		'type' => 'select',
+		'description' => __('Select a method available to your Payop project. Save the Public key and JWT Token first to load this list.', 'payop-woocommerce'),
+		'default' => '',
+		'options' => $this->get_payment_method_options(),
+	],
+
+	'payment_buttons' => [
+		'title' => __('Additional Payop payment buttons', 'payop-woocommerce'),
+		'type' => 'payop_buttons',
+		'description' => __('Add, remove, and configure all additional Payop checkout buttons here. JWT Token is used only to retrieve the available payment methods.', 'payop-woocommerce'),
+		'default' => [],
 	],
 
 	'ipn_url' => [

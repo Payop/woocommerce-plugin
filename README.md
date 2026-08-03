@@ -32,17 +32,31 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 3. Fill in the following:
    - `Public Key` – your project's public key.
    - `Secret Key` – your project's secret key.
+   - `JWT Token` – used to load the payment methods available to your Payop project when configuring buttons.
+   - `Integration type` – choose **Hosted Page** for all available Payop methods or **Hosted Page with Payment Method ID** for one specific method.
+   - `Payment method` – select one of the methods loaded from Payop; required only for **Hosted Page with Payment Method ID**.
 
 👉 You can get these keys in your Payop dashboard (see the step below).
 
-### 4. Set the Callback/IPN URL
+### 4. Add More Payop Payment Buttons
+1. Save the **Public Key** and **JWT Token** in the primary Payop settings to load the methods available to the project.
+2. In **Additional Payop payment buttons**, click **Add payment button**.
+3. Configure its customer-facing name, description, and integration type.
+4. For **Hosted Page with Payment Method ID**, select the required method from the Payop list.
+5. Add or remove more rows as needed, enable the configured buttons, and save.
+
+All buttons are managed on this single settings page and inherit the public key, secret key, callback URL, and common behavior from the primary Payop gateway. The JWT Token is not sent during payment creation.
+
+If a customer returns from Payop Checkout and selects a different Payop button, the plugin creates a new invoice for the new gateway/payment method. Previous invoice IDs remain linked to the order for secure late IPN verification, while a failed or overdue superseded invoice cannot fail the current payment attempt.
+
+### 5. Set the Callback/IPN URL
 1. In the Payop plugin settings, you’ll see an automatically generated **Callback/IPN URL**, like: https://your-domain.com/?wc-api=wc_payop&payop=result
 2. Copy this URL.
 3. Go to [Payop.com](https://payop.com):
 - Navigate to **IPN → Add new IPN**.
 - Paste the copied Callback URL and save.
 
-### 5. Get Your Public and Secret Keys on Payop.com
+### 6. Get Your Public and Secret Keys on Payop.com
 1. Log in to your account at [Payop.com](https://payop.com).
 2. Go to **Projects → Projects list**.
 3. Select the desired project and click **Details**.

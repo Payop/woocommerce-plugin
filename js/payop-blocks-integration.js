@@ -1,33 +1,35 @@
-// Get payment method settings
-const settings = window.wc.wcSettings.getSetting('payop_data', {});
+(function (blockData) {
+	// Get payment method settings
+	const settings = window.wc.wcSettings.getSetting(`${blockData.name}_data`, {});
 
-// Decode the label with localization consideration
-const label = window.wp.htmlEntities.decodeEntities(settings.title) || window.wp.i18n.__('Payop', 'payop');
+	// Decode the label with localization consideration
+	const label = window.wp.htmlEntities.decodeEntities(settings.title) || window.wp.i18n.__('Payop', 'payop-woocommerce');
 
-// Payment Gateway Name
-const blockName = payopBlockData.name;
+	// Payment Gateway Name
+	const blockName = blockData.name;
 
-// Function to get decoded content
-const Content = () => {
-	return window.wp.htmlEntities.decodeEntities(settings.description || '');
-};
+	// Function to get decoded content
+	const Content = () => {
+		return window.wp.htmlEntities.decodeEntities(settings.description || '');
+	};
 
-// Payment method block definition
-const Block_Gateway = {
-	name: blockName,
-	label: label,
-	content: Object( window.wp.element.createElement )( Content, null ),
-	edit: Object( window.wp.element.createElement )( Content, null ),
-	
-	// Function to check if payment can be made
-	canMakePayment() {
-		return true;
-	},
-	
-	ariaLabel: label,
-};
+	// Payment method block definition
+	const Block_Gateway = {
+		name: blockName,
+		label: label,
+		content: Object(window.wp.element.createElement)(Content, null),
+		edit: Object(window.wp.element.createElement)(Content, null),
 
-// Register the block if wcBlocksRegistry is defined
-if (window.wc.wcBlocksRegistry) {
-	window.wc.wcBlocksRegistry.registerPaymentMethod(Block_Gateway);
-}
+		// Function to check if payment can be made
+		canMakePayment() {
+			return true;
+		},
+
+		ariaLabel: label,
+	};
+
+	// Register the block if wcBlocksRegistry is defined
+	if (window.wc.wcBlocksRegistry) {
+		window.wc.wcBlocksRegistry.registerPaymentMethod(Block_Gateway);
+	}
+})(window.payopBlockData || { name: 'payop' });

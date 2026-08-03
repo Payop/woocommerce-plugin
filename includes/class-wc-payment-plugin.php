@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway Plugin.
  *
  * @extends WC_Payment_Gateway
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 if (!defined('ABSPATH')) {
@@ -113,7 +113,9 @@ class Payop_WC_Payment_Plugin {
 			add_action(
 				'woocommerce_blocks_payment_method_type_registration',
 				function (\Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry) {
-					$payment_method_registry->register(new WC_Gateway_Payop_Blocks());
+					foreach (WC_Gateway_Payop::get_configured_gateway_ids() as $gateway_id) {
+						$payment_method_registry->register(new WC_Gateway_Payop_Blocks($gateway_id));
+					}
 				}
 			);
 		}
@@ -138,7 +140,10 @@ class Payop_WC_Payment_Plugin {
 	 * @return array Modified payment gateways.
 	 */
 	public function add_payop_gateway($gateways) {
-		$gateways[] = 'WC_Gateway_Payop';
+		foreach (WC_Gateway_Payop::get_configured_gateway_numbers() as $gateway_number) {
+			$gateways[] = new WC_Gateway_Payop($gateway_number);
+		}
+
 		return $gateways;
 	}
 

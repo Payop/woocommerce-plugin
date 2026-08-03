@@ -4,7 +4,7 @@
  *
  * @final
  * @extends AbstractPaymentMethodType
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 if (!defined('ABSPATH')) {
@@ -26,11 +26,19 @@ final class WC_Gateway_Payop_Blocks extends AbstractPaymentMethodType {
 	protected $name = PAYOP_PAYMENT_GATEWAY_NAME;
 
 	/**
+	 * @param string $gateway_id Dynamic Payop gateway ID.
+	 */
+	public function __construct($gateway_id = PAYOP_PAYMENT_GATEWAY_NAME) {
+		$this->name = sanitize_key($gateway_id);
+	}
+
+	/**
 	 * Initialize the Payop payment gateway block.
 	 */
 	public function initialize() {
-		$this->settings = get_option('woocommerce_payop_settings', []);
-		$this->gateway = new WC_Gateway_Payop();
+		$this->settings = (array) get_option('woocommerce_' . $this->name . '_settings', []);
+		$gateways = WC()->payment_gateways()->payment_gateways();
+		$this->gateway = isset($gateways[$this->name]) ? $gateways[$this->name] : null;
 	}
 
 	/**
@@ -39,7 +47,7 @@ final class WC_Gateway_Payop_Blocks extends AbstractPaymentMethodType {
 	 * @return bool Whether the payment gateway is active.
 	 */
 	public function is_active() {
-		return $this->gateway->is_available();
+		return $this->gateway instanceof WC_Gateway_Payop && $this->gateway->is_available();
 	}
 
 	/**
@@ -48,8 +56,10 @@ final class WC_Gateway_Payop_Blocks extends AbstractPaymentMethodType {
 	 * @return array Script handles.
 	 */
 	public function get_payment_method_script_handles() {
+		$handle = 'payop-blocks-integration-' . $this->name;
+
 		wp_register_script(
-			'payop-blocks-integration',
+			$handle,
 			PAYOP_PLUGIN_URL . '/js/payop-blocks-integration.js',
 			[
 				'wc-blocks-registry',
@@ -58,20 +68,20 @@ final class WC_Gateway_Payop_Blocks extends AbstractPaymentMethodType {
 				'wp-html-entities',
 				'wp-i18n',
 			],
-			null,
+			'3.2.0',
 			true
 		);
 
 		// Set script translations if available.
 		if (function_exists('wp_set_script_translations')) {
-			wp_set_script_translations('payop-blocks-integration');
+			wp_set_script_translations($handle, 'payop-woocommerce', PAYOP_PLUGIN_PATH . 'languages');
 		}
 
-		wp_localize_script('payop-blocks-integration', 'payopBlockData', [
-			'name' => PAYOP_PAYMENT_GATEWAY_NAME,
+		wp_localize_script($handle, 'payopBlockData', [
+			'name' => $this->name,
 		]);
 
-		return ['payop-blocks-integration'];
+		return [$handle];
 	}
 
 	/**
@@ -81,8 +91,8 @@ final class WC_Gateway_Payop_Blocks extends AbstractPaymentMethodType {
 	 */
 	public function get_payment_method_data() {
 		return [
-			'title'	      => $this->gateway->title,
-			'description' => $this->gateway->description,
+			'title'	      => $this->gateway instanceof WC_Gateway_Payop ? $this->gateway->title : __('Payop', 'payop-woocommerce'),
+			'description' => $this->gateway instanceof WC_Gateway_Payop ? $this->gateway->description : '',
 		];
 	}
 }

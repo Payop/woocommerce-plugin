@@ -1,110 +1,428 @@
+# Copyright (C) 2026
+# This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WooCommerce PayOp Gateway 1.0.0\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2019-MO-DA HO:MI+ZONE\n"
+"Project-Id-Version: Payop WooCommerce Payment Gateway 3.2.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woocommerce-plugin\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-07-29T14:45:58+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: payop-woocommerce\n"
 
-msgid "PayOp"
+#. Plugin Name of the plugin
+#: payop.php
+msgid "Payop WooCommerce Payment Gateway"
 msgstr ""
 
-# Настройка приема электронных платежей через PayOp.
-msgid "Take payments via PayOp"
-msgstr ""
-# Шлюз отключен
-msgid "Gateway is disabled"
+#. Plugin URI of the plugin
+#: payop.php
+msgid "https://wordpress.org/plugins/payop-woocommerce/"
 msgstr ""
 
-# PayOp не поддерживает валюты Вашего магазина.
-msgid "PayOp does not support the currency of your store"
+#. Description of the plugin
+#: payop.php
+msgid "Payop: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments"
 msgstr ""
 
-# Включить платежи через PayOp
-msgid "Enable PayOp payments"
+#. Author URI of the plugin
+#: payop.php
+msgid "https://payop.com/"
 msgstr ""
 
-# Включить/Отключить
-msgid "Enable/Disable"
+#: includes/class-wc-gateway-payop-blocks.php:94
+#: includes/class-wc-gateway-payop.php:144
+#: includes/settings-payop.php:24
+#: js/payop-blocks-integration.js:6
+msgid "Payop"
 msgstr ""
 
-# Название способа оплаты
-msgid "Name of payment gateway"
+#: includes/class-wc-gateway-payop.php:145
+#: includes/class-wc-gateway-payop.php:252
+#, php-format
+msgid "Payop payment option #%d"
 msgstr ""
 
-# Название способа оплаты, которое увидит пользователь при оформлении заказа
-msgid "The name of the payment gateway that the user see when placing the order"
+#: includes/class-wc-gateway-payop.php:147
+msgid "Take payments via Payop."
 msgstr ""
 
-# Публичный ключ
-msgid "Public key"
+#: includes/class-wc-gateway-payop.php:148
+msgid "This Payop checkout button is managed from the primary Payop gateway settings."
 msgstr ""
 
-# Секретный ключ
-msgid "Secret key"
+#: includes/class-wc-gateway-payop.php:566
+msgid "Payop payment option changed; creating a new invoice"
 msgstr ""
 
-# Выдается в Личном кабинете https://payop.com
-msgid "Issued in the client panel https://payop.com"
-msgstr ""
-
-# Описание способа оплаты, которое клиент будет видеть на вашем сайте.
-msgid "Description of the payment gateway that the client will see on your site"
-msgstr ""
-
-# Автозавершение заказа
-msgid "Order completion"
-msgstr ""
-
-# Автоматический перевод заказа в статус \"Выполнен\" после успешной оплаты
-msgid "Automatic transfer of the order to the status \"Completed\" after successful payment"
-msgstr ""
-
-# Язык платежной формы
-msgid "Payment form language"
-msgstr ""
-
-# Выберите язык платежной формы для Вашего магазина
-msgid "Select the language of the payment form for your store"
-msgstr ""
-
-# Русский
-msgid "Russian"
-msgstr ""
-
-# Английский
-msgid "English"
-msgstr ""
-
-# Оплата заказа #
-msgid "Payment order #"
-msgstr ""
-
-# Запрос к платежному сервису был отправлен некорректно
-msgid "Request to payment service was sent incorrectly"
-msgstr ""
-
-# Оплатить
-msgid "Pay"
-msgstr ""
-
-# Отказаться от оплаты & вернуться в корзину
-msgid "Refuse payment & return to cart"
-msgstr ""
-
-# Спасибо за Ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы заплатить.
+#: includes/class-wc-gateway-payop.php:587
 msgid "Thank you for your order, please click the button below to pay"
 msgstr ""
 
-# Платеж успешно оплачен
+#: includes/class-wc-gateway-payop.php:617
+msgid "Stored Payop invoice is overdue; creating a replacement invoice"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:662
+msgid "Payment order #"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:689
+msgid "Payop invoice creation requested"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:695
+#: includes/class-wc-gateway-payop.php:702
+msgid "Payop invoice creation failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:697
+#: includes/class-wc-gateway-payop.php:719
+msgid "Request to payment service was sent incorrectly"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:704
+msgid "Payment service did not return an invoice identifier"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:714
+msgid "Payop invoice created"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:732
+msgid "Redirected To Payment Page"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:738
+msgid "Payop payment page displayed to customer"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:891
+msgid "Payop callback attempt received"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:954
+msgid "User may have abandoned the payment page: no Payop callback received"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:978
+msgid "Payop status update result"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:983
+#: includes/class-wc-gateway-payop.php:1797
+msgid "Payop status update failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1249
+msgid "Payop request rejected: missing stored invoice id"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1276
+msgid "Pay"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1277
+msgid "Refuse payment & return to cart"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1358
+msgid "Payop IPN received; verifying invoice with Payop API"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1368
+msgid "Payop invoice verification failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1381
+#: includes/class-wc-gateway-payop.php:1390
+#: includes/class-wc-gateway-payop.php:1394
+msgid "Payop invoice verified as paid"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1403
+#: includes/class-wc-gateway-payop.php:1406
+msgid "Payop invoice verified as failed or overdue"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1414
+msgid "Superseded Payop invoice is no longer active; order status was not changed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1419
+#: includes/class-wc-gateway-payop.php:1422
+msgid "Payop invoice is not paid yet; waiting for confirmation"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1433
+msgid "Payop IPN validation passed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1437
+msgid "Payop payment pending"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1439
+msgid "Transaction pending"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1447
+msgid "Payop payment paid"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1450
+#: includes/class-wc-gateway-payop.php:1452
 msgid "Payment successfully paid"
 msgstr ""
 
-# Платеж не оплачен
+#: includes/class-wc-gateway-payop.php:1462
+msgid "Payop payment failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1464
 msgid "Payment not paid"
 msgstr ""
 
-# Платеж успешно завершен
-msgid "Payment completed successfully"
+#: includes/class-wc-gateway-payop.php:1473
+msgid "Payop IPN processing failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1480
+msgid "Payop IPN validation failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1517
+#: includes/class-wc-gateway-payop.php:1558
+msgid "Payop callback validation failed"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1528
+msgid "Payment pre-approved by provider (awaiting confirmation)"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1535
+msgid "Awaiting Payop confirmation (IPN)"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1566
+msgid "Payop fail callback received; awaiting IPN/provider verification"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1637
+msgid "Payop payment initiated at checkout"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1784
+msgid "Payment completed successfully (IPN)"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1868
+msgid "Select a payment method"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1895
+#, php-format
+msgid "Saved payment method (ID: %s)"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1939
+msgid "Save the Public key and JWT Token to load available payment methods."
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1945
+msgid "The Public key does not contain a valid application ID."
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1971
+#: includes/class-wc-gateway-payop.php:1984
+#, php-format
+msgid "Unable to load Payop payment methods: %s"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:1982
+msgid "Unexpected API response."
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2038
+#: includes/settings-payop.php:31
+msgid "Accept online payments using Payop.com"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2060
+msgid "Enabled"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2061
+msgid "Checkout name"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2062
+#: includes/settings-payop.php:28
+msgid "Description"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2063
+#: includes/settings-payop.php:62
+msgid "Integration type"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2064
+#: includes/settings-payop.php:73
+msgid "Payment method"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2065
+msgid "Actions"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2084
+msgid "Add payment button"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2088
+msgid "Save a valid Public key and JWT Token before adding payment buttons."
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2200
+#: includes/settings-payop.php:67
+msgid "Hosted Page"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2201
+#: includes/settings-payop.php:68
+msgid "Hosted Page with Payment Method ID"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2214
+msgid "Remove"
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2263
+msgid "Every additional Payop payment button must have a checkout name."
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2270
+#, php-format
+msgid "Select a payment method for the “%s” Payop button."
+msgstr ""
+
+#: includes/class-wc-gateway-payop.php:2309
+msgid "Select a payment method when Hosted Page with Payment Method ID is selected. The primary Payop option will stay hidden at checkout until a method is selected."
+msgstr ""
+
+#. translators: %s: URL to the primary Payop gateway settings.
+#: includes/class-wc-gateway-payop.php:2337
+#, php-format
+msgid "This option is configured in the <a href=\"%s\">primary Payop gateway settings</a>."
+msgstr ""
+
+#: includes/class-wc-payment-plugin.php:49
+#: includes/class-wc-payment-plugin.php:55
+#: includes/class-wc-payment-plugin.php:67
+msgid "The \""
+msgstr ""
+
+#: includes/class-wc-payment-plugin.php:61
+msgid "For the correct operation of the \""
+msgstr ""
+
+#: includes/class-wc-payment-plugin.php:132
+msgid "Settings"
+msgstr ""
+
+#: includes/settings-payop.php:14
+msgid "Enable Payop payments"
+msgstr ""
+
+#: includes/settings-payop.php:16
+msgid "Enable/Disable"
+msgstr ""
+
+#: includes/settings-payop.php:21
+msgid "Name of payment gateway"
+msgstr ""
+
+#: includes/settings-payop.php:23
+msgid "The name of the payment gateway that the user see when placing the order"
+msgstr ""
+
+#: includes/settings-payop.php:30
+msgid "Description of the payment gateway that the client will see on your site."
+msgstr ""
+
+#: includes/settings-payop.php:35
+msgid "Public key"
+msgstr ""
+
+#: includes/settings-payop.php:37
+#: includes/settings-payop.php:44
+msgid "Issued in the client panel https://payop.com"
+msgstr ""
+
+#: includes/settings-payop.php:42
+msgid "Secret key"
+msgstr ""
+
+#: includes/settings-payop.php:52
+msgid "JWT Token"
+msgstr ""
+
+#: includes/settings-payop.php:54
+msgid "Required only to load the payment methods available to your Payop project and configure additional checkout buttons."
+msgstr ""
+
+#: includes/settings-payop.php:64
+msgid "Choose Hosted Page to show all available methods on Payop, or Hosted Page with Payment Method ID to open one specific method."
+msgstr ""
+
+#: includes/settings-payop.php:75
+msgid "Select a method available to your Payop project. Save the Public key and JWT Token first to load this list."
+msgstr ""
+
+#: includes/settings-payop.php:81
+msgid "Additional Payop payment buttons"
+msgstr ""
+
+#: includes/settings-payop.php:83
+msgid "Add, remove, and configure all additional Payop checkout buttons here. JWT Token is used only to retrieve the available payment methods."
+msgstr ""
+
+#: includes/settings-payop.php:88
+msgid "Callback / IPN URL"
+msgstr ""
+
+#: includes/settings-payop.php:90
+msgid "Copy this URL and paste it in your Payop project settings (IPN section)"
+msgstr ""
+
+#: includes/settings-payop.php:102
+msgid "Order completion"
+msgstr ""
+
+#: includes/settings-payop.php:104
+msgid "Automatic transfer of the order to the status \"Completed\" after successful payment"
+msgstr ""
+
+#: includes/settings-payop.php:109
+msgid "Detailed logging"
+msgstr ""
+
+#: includes/settings-payop.php:111
+msgid "Write detailed Payop callback/IPN logs to WooCommerce logs"
+msgstr ""
+
+#: includes/settings-payop.php:112
+msgid "Order notes are always added for payment and callback events. Disable this option only to stop writing technical Payop entries to WooCommerce logs."
+msgstr ""
+
+#: includes/settings-payop.php:117
+msgid "Skip confirmation"
+msgstr ""
+
+#: includes/settings-payop.php:119
+msgid "Skip page checkout confirmation"
 msgstr ""
