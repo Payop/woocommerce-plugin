@@ -4,12 +4,12 @@ Plugin Name: Payop WooCommerce Payment Gateway
 Plugin URI: https://wordpress.org/plugins/payop-woocommerce/
 Description: Payop: Online payment processing service ➦ Accept payments online by 150+ methods from 170+ countries. Payments gateway for Growing Your Business in New Locations and fast online payments
 Author URI: https://payop.com/
-Version: 3.1.6
+Version: 3.2.0
 Requires at least: 6.3
-Tested up to: 7.0
+Tested up to: 7.2
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 10.7.0
+WC tested up to: 10.9.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Domain Path: /languages
@@ -32,6 +32,9 @@ define('PAYOP_TXID_META', 'payop_txid');
 define('PAYOP_REDIRECTED_AT_META', 'payop_redirected_at');
 define('PAYOP_CALLBACK_RECEIVED_AT_META', 'payop_callback_received_at');
 define('PAYOP_ABANDONED_NOTE_ADDED_META', 'payop_abandoned_note_added');
+define('PAYOP_PAYMENT_METHOD_ID_META', 'payop_payment_method_id');
+define('PAYOP_INVOICE_CONTEXT_META', 'payop_invoice_context');
+define('PAYOP_INVOICE_HISTORY_META', 'payop_invoice_history');
 define('PAYOP_PLUGIN_NAME', 'Payop WooCommerce Payment Gateway');
 define('PAYOP_MIN_PHP_VERSION', '7.4');
 define('PAYOP_MIN_WP_VERSION', '6.3');
@@ -40,6 +43,7 @@ define('PAYOP_IPN_VERSION_V1', 'V1');
 define('PAYOP_IPN_VERSION_V2', 'V2');
 define('PAYOP_HASH_ALGORITHM', 'sha256');
 define('PAYOP_API_IDENTIFIER', 'identifier');
+define('PAYOP_MAX_GATEWAY_INSTANCES', 50);
 
 require_once PAYOP_PLUGIN_PATH . '/includes/class-wc-payment-plugin.php';
 

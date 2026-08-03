@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.1.6
-Stable tag: 3.1.6
+Version: 3.2.0
+Stable tag: 3.2.0
 Requires at least: 6.3
-Tested up to: 7.0
+Tested up to: 7.2
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 10.7.0
+WC tested up to: 10.9.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,23 @@ What this module does for you:
 3. Enter your credentials:
    - **Public Key** – Available in your Payop merchant dashboard.
    - **Secret Key** – Available in your Payop merchant dashboard.
+   - **JWT Token** – Used to load payment methods available to the project.
+4. Choose the integration type:
+   - **Hosted Page** – Show all payment methods available through Payop.
+   - **Hosted Page with Payment Method ID** – Open one specific payment method.
+5. For **Hosted Page with Payment Method ID**, select a method loaded from your Payop project.
+
+= Add Multiple Payop Payment Buttons =
+
+1. Open the primary Payop gateway settings.
+2. Save a valid **Public Key** and **JWT Token** to load the methods available to the project.
+3. In **Additional Payop payment buttons**, click **Add payment button**.
+4. Configure the name, description, integration type, and payment method in the repeater row.
+5. Add or remove more rows as needed, enable the required buttons, and save.
+
+All buttons are managed on one settings page. Additional buttons inherit credentials, callback URL, and common behavior from the primary Payop gateway. The JWT Token is not sent during payment creation.
+
+When a customer returns from Payop Checkout and selects a different Payop button, a new invoice is created for that gateway/payment method. Previous invoice IDs remain linked to the order for secure late IPN verification, while failed or overdue superseded invoices do not fail the current attempt.
 
 = Set Callback/IPN URL =
 
@@ -77,6 +94,19 @@ What this module does for you:
 
 
 == Changelog ==
+
+= 3.2.0 =
+* Added: Multiple independently configurable Payop payment buttons at checkout.
+* Added: Hosted Page with Payment Method ID integration through the invoice API paymentMethod field.
+* Added: Dynamic Payop gateway support for both classic checkout and WooCommerce Checkout Blocks.
+* Added: JWT-authenticated loading of payment methods available to the Payop project.
+* Added: A single-page repeater for adding, removing, and configuring checkout buttons.
+* Added: Conditional Payment Method selection that is shown and required only for Hosted Page with Payment Method ID integrations.
+* Fixed: Automatically replace an overdue stored invoice before redirecting to Payop Checkout.
+* Fixed: Create a new invoice when the customer returns and changes the Payop button or Payment Method ID.
+* Improved: Keep an immutable invoice history so late callbacks remain securely bound to the order without allowing superseded failures to affect the current attempt.
+* Improved: Additional Payop gateways inherit credentials and callback settings from the primary gateway.
+* Improved: Payment button settings layout, validation, and table spacing in the WooCommerce administration panel.
 
 = 1.0.0 =
 * 2019-02-18
