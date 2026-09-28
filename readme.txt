@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.2.0
-Stable tag: 3.2.0
+Version: 3.2.1
+Stable tag: 3.2.1
 Requires at least: 6.3
-Tested up to: 7.2
+Tested up to: 7.1
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 10.9.4
+WC tested up to: 11.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,12 @@ When a customer returns from Payop Checkout and selects a different Payop button
 
 
 == Changelog ==
+
+= 3.2.1 =
+* Added: Send the x-integration-tag: wordpress header with Payop invoice creation requests for all Payop gateway instances.
+* Security: Validate callbacks and order binding before writing order notes or callback metadata.
+* Security: Prevent rejected IPN and browser return requests from modifying orders, including orders using other payment gateways.
+* Security: Sanitize, escape, and limit callback field values included in order notes.
 
 = 3.2.0 =
 * Added: Multiple independently configurable Payop payment buttons at checkout.
