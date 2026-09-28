@@ -68,7 +68,7 @@ final class WC_Gateway_Payop_Blocks extends AbstractPaymentMethodType {
 				'wp-html-entities',
 				'wp-i18n',
 			],
-			'3.2.0',
+			'3.2.1',
 			true
 		);
 
