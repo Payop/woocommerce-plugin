@@ -3,7 +3,7 @@
  * WooCommerce Payop Payment Gateway.
  *
  * @extends WC_Payment_Gateway
- * @version 1.2.0
+ * @version 1.3.0
  */
 
 if (!defined('ABSPATH')) {
@@ -979,6 +979,16 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			'from' => $order->get_status(),
 			'to' => $status,
 		], $details);
+
+		// A delayed pending event must not reopen a closed order or downgrade a paid one.
+		if (in_array($status, ['pending', 'on-hold'], true)
+			&& $order->has_status(['cancelled', 'refunded', 'processing', 'completed'])) {
+			$details['requested_status'] = $status;
+			$details['to'] = $order->get_status();
+			$this->add_payop_order_note($order, __('Payop pending update ignored; order status preserved', 'payop-woocommerce'), $details);
+			$this->log_payop('info', 'Payop pending update ignored; order status preserved', $details, $order);
+			return true;
+		}
 
 		try {
 			$order->update_status($status, $note);
