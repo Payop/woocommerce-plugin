@@ -1,12 +1,12 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.2.2
-Stable tag: 3.2.2
+Version: 3.2.3
+Stable tag: 3.2.3
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
 WC requires at least: 8.3
-WC tested up to: 11.1.2
+WC tested up to: 11.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,9 @@ When a customer returns from Payop Checkout and selects a different Payop button
 
 
 == Changelog ==
+
+= 3.2.3 =
+* Fixed: Confirm payments for overdue invoices by authenticating invoice verification requests with the project's Public Key and a SHA-256 signature generated using the Secret Key, without requiring a JWT Token.
 
 = 3.2.2 =
 * Fixed: Delayed pending IPNs and browser returns no longer reopen cancelled or refunded orders or downgrade paid orders.

@@ -1004,7 +1004,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Fetch trusted invoice details from Payop.
+	 * Fetch trusted invoice details, including overdue invoices, using project keys.
 	 *
 	 * @param string $invoice_id
 	 * @return array
@@ -1022,6 +1022,8 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			'headers' => [
 				'Accept' => 'application/json',
 				'Content-Type' => 'application/json',
+				'publicKey' => $this->public_key,
+				'signature' => hash(PAYOP_HASH_ALGORITHM, $invoice_id . ':' . $this->secret_key),
 			],
 		]);
 

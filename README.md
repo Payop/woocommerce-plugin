@@ -47,6 +47,8 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 
 All buttons are managed on this single settings page and inherit the public key, secret key, callback URL, and common behavior from the primary Payop gateway. The JWT Token is not sent during payment creation.
 
+Invoice verification uses the project's Public Key and a SHA-256 signature of `invoiceId:secretKey` in the `publicKey` and `signature` request headers. This allows the plugin to verify overdue invoices without a JWT Token. A paid invoice is accepted only after its identifier, order ID, amount, and currency match the WooCommerce order, even when `isOverdue` is true.
+
 If a customer returns from Payop Checkout and selects a different Payop button, the plugin creates a new invoice for the new gateway/payment method. Previous invoice IDs remain linked to the order for secure late IPN verification, while a failed or overdue superseded invoice cannot fail the current payment attempt.
 
 ### 5. Set the Callback/IPN URL
