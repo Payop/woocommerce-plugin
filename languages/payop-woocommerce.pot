@@ -230,11 +230,11 @@ msgid "Saved payment method (ID: %s)"
 msgstr ""
 
 #: includes/class-wc-gateway-payop.php:1939
-msgid "Save the Public key and JWT Token to load available payment methods."
+msgid "Save the Project ID and JWT Token to load available payment methods."
 msgstr ""
 
 #: includes/class-wc-gateway-payop.php:1945
-msgid "The Public key does not contain a valid application ID."
+msgid "Project ID"
 msgstr ""
 
 #: includes/class-wc-gateway-payop.php:1971
@@ -284,7 +284,7 @@ msgid "Add payment button"
 msgstr ""
 
 #: includes/class-wc-gateway-payop.php:2088
-msgid "Save a valid Public key and JWT Token before adding payment buttons."
+msgid "Save a valid Project ID and JWT Token before adding payment buttons."
 msgstr ""
 
 #: includes/class-wc-gateway-payop.php:2200
@@ -380,7 +380,7 @@ msgid "Choose Hosted Page to show all available methods on Payop, or Hosted Page
 msgstr ""
 
 #: includes/settings-payop.php:75
-msgid "Select a method available to your Payop project. Save the Public key and JWT Token first to load this list."
+msgid "Select a method available to your Payop project. Save the Project ID and JWT Token first to load this list."
 msgstr ""
 
 #: includes/settings-payop.php:81
@@ -425,4 +425,8 @@ msgstr ""
 
 #: includes/settings-payop.php:119
 msgid "Skip page checkout confirmation"
+msgstr ""
+
+#: includes/settings-payop.php
+msgid "Enter the actual Project ID from your Payop merchant dashboard. It may differ from the Public key after a key transfer. Required to load available payment methods."
 msgstr ""

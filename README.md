@@ -31,6 +31,7 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 2. Find **Payop** in the list, click **Enable**, then click **Set up**.
 3. Fill in the following:
    - `Public Key` – your project's public key.
+   - **Project ID** – The actual project ID from Payop; may differ from the Public Key suffix after a key transfer. Required to load payment methods.
    - `Secret Key` – your project's secret key.
    - `JWT Token` – used to load the payment methods available to your Payop project when configuring buttons.
    - `Integration type` – choose **Hosted Page** for all available Payop methods or **Hosted Page with Payment Method ID** for one specific method.
@@ -39,13 +40,15 @@ Add the ability to accept payments in WooCommerce via Payop.com.
 👉 You can get these keys in your Payop dashboard (see the step below).
 
 ### 4. Add More Payop Payment Buttons
-1. Save the **Public Key** and **JWT Token** in the primary Payop settings to load the methods available to the project.
+1. Save the **Project ID** and **JWT Token** in the primary Payop settings to load the methods available to the project.
 2. In **Additional Payop payment buttons**, click **Add payment button**.
 3. Configure its customer-facing name, description, and integration type.
 4. For **Hosted Page with Payment Method ID**, select the required method from the Payop list.
 5. Add or remove more rows as needed, enable the configured buttons, and save.
 
 All buttons are managed on this single settings page and inherit the public key, secret key, callback URL, and common behavior from the primary Payop gateway. The JWT Token is not sent during payment creation.
+
+Invoice verification uses the project's Public Key and a SHA-256 signature of `invoiceId:secretKey` in the `publicKey` and `signature` request headers. This allows the plugin to verify overdue invoices without a JWT Token. A paid invoice is accepted only after its identifier, order ID, amount, and currency match the WooCommerce order, even when `isOverdue` is true.
 
 If a customer returns from Payop Checkout and selects a different Payop button, the plugin creates a new invoice for the new gateway/payment method. Previous invoice IDs remain linked to the order for secure late IPN verification, while a failed or overdue superseded invoice cannot fail the current payment attempt.
 

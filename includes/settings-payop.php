@@ -48,6 +48,13 @@ return [
 		],
 	],
 
+	'project_id' => [
+		'title' => __('Project ID', 'payop-woocommerce'),
+		'type' => 'text',
+		'description' => __('Enter the actual Project ID from your Payop merchant dashboard. It may differ from the Public key after a key transfer. Required to load available payment methods.', 'payop-woocommerce'),
+		'default' => '',
+	],
+
 	'jwt_token' => [
 		'title' => __('JWT Token', 'payop-woocommerce'),
 		'type' => 'password',
@@ -72,7 +79,7 @@ return [
 	'payment_method' => [
 		'title' => __('Payment method', 'payop-woocommerce'),
 		'type' => 'select',
-		'description' => __('Select a method available to your Payop project. Save the Public key and JWT Token first to load this list.', 'payop-woocommerce'),
+		'description' => __('Select a method available to your Payop project. Save the Project ID and JWT Token first to load this list.', 'payop-woocommerce'),
 		'default' => '',
 		'options' => $this->get_payment_method_options(),
 	],

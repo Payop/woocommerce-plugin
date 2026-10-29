@@ -1004,7 +1004,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Fetch trusted invoice details from Payop.
+	 * Fetch trusted invoice details, including overdue invoices, using project keys.
 	 *
 	 * @param string $invoice_id
 	 * @return array
@@ -1022,6 +1022,8 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			'headers' => [
 				'Accept' => 'application/json',
 				'Content-Type' => 'application/json',
+				'publicKey' => $this->public_key,
+				'signature' => hash(PAYOP_HASH_ALGORITHM, $invoice_id . ':' . $this->secret_key),
 			],
 		]);
 
@@ -1949,21 +1951,15 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		}
 
 		$this->available_payment_methods = [];
-		$public_key = isset($settings['public_key']) ? trim((string) $settings['public_key']) : '';
+		$application_id = isset($settings['project_id']) ? trim((string) $settings['project_id']) : '';
 		$jwt_token = isset($settings['jwt_token']) ? trim((string) $settings['jwt_token']) : '';
 
-		if ($public_key === '' || $jwt_token === '') {
-			$this->available_payment_methods_error = __('Save the Public key and JWT Token to load available payment methods.', 'payop-woocommerce');
+		if ($application_id === '' || $jwt_token === '') {
+			$this->available_payment_methods_error = __('Save the Project ID and JWT Token to load available payment methods.', 'payop-woocommerce');
 			return [];
 		}
 
-		$application_id = preg_replace('/^application-/', '', $public_key);
-		if ($application_id === '') {
-			$this->available_payment_methods_error = __('The Public key does not contain a valid application ID.', 'payop-woocommerce');
-			return [];
-		}
-
-		$cache_key = 'payop_methods_' . md5($public_key . '|' . $jwt_token);
+		$cache_key = 'payop_methods_' . md5($application_id . '|' . $jwt_token);
 		$cached_methods = get_transient($cache_key);
 		if (is_array($cached_methods)) {
 			$this->available_payment_methods = $cached_methods;
@@ -2102,7 +2098,7 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 					</button>
 				</p>
 				<?php if (!$can_add_buttons) : ?>
-					<p class="description"><?php esc_html_e('Save a valid Public key and JWT Token before adding payment buttons.', 'payop-woocommerce'); ?></p>
+					<p class="description"><?php esc_html_e('Save a valid Project ID and JWT Token before adding payment buttons.', 'payop-woocommerce'); ?></p>
 				<?php endif; ?>
 			</td>
 		</tr>
