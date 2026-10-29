@@ -40,6 +40,7 @@ What this module does for you:
 2. Find **Payop** in the list and click **Enable**, then click **Set up**.
 3. Enter your credentials:
    - **Public Key** – Available in your Payop merchant dashboard.
+   - **Project ID** – The actual project ID from Payop; may differ from the Public Key suffix after a key transfer. Required to load payment methods.
    - **Secret Key** – Available in your Payop merchant dashboard.
    - **JWT Token** – Used to load payment methods available to the project.
 4. Choose the integration type:
@@ -50,7 +51,7 @@ What this module does for you:
 = Add Multiple Payop Payment Buttons =
 
 1. Open the primary Payop gateway settings.
-2. Save a valid **Public Key** and **JWT Token** to load the methods available to the project.
+2. Save a valid **Project ID** and **JWT Token** to load the methods available to the project.
 3. In **Additional Payop payment buttons**, click **Add payment button**.
 4. Configure the name, description, integration type, and payment method in the repeater row.
 5. Add or remove more rows as needed, enable the required buttons, and save.
@@ -97,6 +98,8 @@ When a customer returns from Payop Checkout and selects a different Payop button
 
 = 3.2.3 =
 * Fixed: Confirm payments for overdue invoices by authenticating invoice verification requests with the project's Public Key and a SHA-256 signature generated using the Secret Key, without requiring a JWT Token.
+* Added: A separate Project ID setting for loading available payment methods.
+* Fixed: Load payment methods using the configured Project ID instead of deriving it from the Public Key, so transferred keys work with the new project. Payment method caching now uses the Project ID and JWT Token.
 
 = 3.2.2 =
 * Fixed: Delayed pending IPNs and browser returns no longer reopen cancelled or refunded orders or downgrade paid orders.
@@ -121,74 +124,77 @@ When a customer returns from Payop Checkout and selects a different Payop button
 * Improved: Additional Payop gateways inherit credentials and callback settings from the primary gateway.
 * Improved: Payment button settings layout, validation, and table spacing in the WooCommerce administration panel.
 
-= 1.0.0 =
-* 2019-02-18
-* Small fixes.
+= 3.1.6 =
+* Security: Verify Payop V2 IPN payment status with the Payop invoice API before marking orders as paid.
+* Security: Validate invoice ID, order ID, amount, and currency against trusted Payop API data before completing orders.
+* Security: Enabled SSL certificate verification for Payop API requests.
 
-= 1.0.1 =
-* 2017-01-21
-* Update docs.
-* Add more transaltions.
+= 3.1.5 =
+* Added: Payment flow order notes for checkout initiation, Payop invoice creation, and redirect/payment page display.
+* Added: Delayed possible-abandonment order note when no callback arrives after the payment page step.
 
-= 1.0.2 =
-* 2017-01-23
-* Update translation.
-* Change logo.
+= 3.1.4 =
+* Added: Detailed Payop order notes and WooCommerce logs for IPN/callback attempts, validation failures, payment status outcomes, and status update failures.
+* Added: Gateway setting to enable detailed technical WooCommerce logs when needed.
 
-= 1.0.3 =
-* 2019-03-01
-* Added POST JSON payload processing.
+= 3.1.3 =
+* Fixed: Sensitive Data Leakage to Third-Party API.
 
-= 1.0.4 =
-* Update docs.
-* Code standardization.
+= 3.1.2 =
+* Fixed: Prevented the hosted payment form from reopening on the thank-you page after browser redirects.
+* Improved: Normalized success and fail callback URLs before sending them to Payop.
 
-= 1.0.5 =
-* Update callback response.
+= 3.1.1 =
+* Security: Fixed critical vulnerability where forged GET request could mark any order as paid.
+* Security: Added strict validation to prevent processing non-Payop orders via Payop endpoints (payment method check + invoice meta binding).
+* Security: Improved IPN validation by binding Payop invoice/txid to WooCommerce order and rejecting mismatches.
 
-= 1.0.6 =
-* Add multi-currency
+= 3.0.11 =
+* Fixed: Fixed Incorrect behaviour when pressing the `Back` button in the browser
 
-= 1.0.7 =
-* Add setting button in plugin area
-* Add skip checkout page option
-* Add select default payment group
-* Add select directpay payment method
-* Add caching for payment methods
+= 3.0.10 =
+* Added: Read-only IPN URL field in plugin settings
+* Updated: Installation and configuration documentation
+* Improved: Internal code refactoring for better maintainability and readability
 
-= 1.0.8 =
-* Fix payment methods error
+= 3.0.9 =
+* Optimized: Centralized status mapping logic for better maintainability.
+* Improved: Enhanced readability and consistency in `process_result_request` method.
+* Added: WooCommerce 9.7.x Compatibility
+* Added: WordPress 6.7.x Compatibility
+* Fixed: Addressed redundant status checks by introducing a dedicated mapping method.
 
-= 1.0.9 =
-* Small fix
+= 3.0.8 =
+* Added: WooCommerce 9.3.x Compatibility
+* Fixed: Fixed an issue where a space was sent if the first name and/or last name were missing in the payment data, causing validation errors. Now, if one or both fields are empty, an appropriate string is sent.
 
-= 1.0.10 =
-* Temporarily removed the option "Payment method group"
-* Small fixes
+= 3.0.7 =
+* Added: WordPress 6.6.x Compatibility
+* Added: WooCommerce 9.1.x Compatibility
 
-= 1.0.11 =
-* Bug fixes
+= 3.0.6 =
+* General: changed the domain for the API
+* Optimized: General plugin improvements
 
-= 2.0 =
-* Add new API support
-* Add JWT Token in settings area
-* Add changes related to WooCommerce API update
+= 3.0.5 =
+* Added: Compatibility with WooCommerce 8.9.x
+* Fixed: Resolved 404 error on the checkout page
 
-= 2.0.1 =
-* Directpay quickfix
+= 3.0.4 =
+* General: Plugin improvements
+* General: Removal of 'Direct payment' functionality
+* Added: WordPress 6.5.x Compatibility
+* Added: WooCommerce 8.8.x Compatibility
 
-= 2.0.2 =
-* Remove warning 'Undefined index data' message
-* Add empty JWT token check
+= 3.0.3 =
+* General: minor changes
 
-= 2.0.3 =
-* Checkout bugfix
+= 3.0.2 =
+* General: minor changes
+* Fixed: php errors
 
-= 2.0.4 =
-* Disallow override of page "order-received" by other plugins
-
-= 2.0.5 =
-* Small fixes
+= 3.0.1 =
+* General: minor changes
 
 = 3.0.0 =
 * General: plugin improvements
@@ -201,74 +207,71 @@ When a customer returns from Payop Checkout and selects a different Payop button
 * Fixed: Error stating "No payment methods available"
 * Fixed: Bug related to reordering
 
-= 3.0.1 =
-* General: minor changes
+= 2.0.5 =
+* Small fixes
 
-= 3.0.2 =
-* General: minor changes
-* Fixed: php errors
+= 2.0.4 =
+* Disallow override of page "order-received" by other plugins
 
-= 3.0.3 =
-* General: minor changes
+= 2.0.3 =
+* Checkout bugfix
 
-= 3.0.4 =
-* General: Plugin improvements
-* General: Removal of 'Direct payment' functionality
-* Added: WordPress 6.5.x Compatibility
-* Added: WooCommerce 8.8.x Compatibility
+= 2.0.2 =
+* Remove warning 'Undefined index data' message
+* Add empty JWT token check
 
-= 3.0.5 =
-* Added: Compatibility with WooCommerce 8.9.x
-* Fixed: Resolved 404 error on the checkout page
+= 2.0.1 =
+* Directpay quickfix
 
-= 3.0.6 =
-* General: changed the domain for the API
-* Optimized: General plugin improvements
+= 2.0 =
+* Add new API support
+* Add JWT Token in settings area
+* Add changes related to WooCommerce API update
 
-= 3.0.7 =
-* Added: WordPress 6.6.x Compatibility
-* Added: WooCommerce 9.1.x Compatibility
+= 1.0.11 =
+* Bug fixes
 
-= 3.0.8 =
-* Added: WooCommerce 9.3.x Compatibility
-* Fixed: Fixed an issue where a space was sent if the first name and/or last name were missing in the payment data, causing validation errors. Now, if one or both fields are empty, an appropriate string is sent.
+= 1.0.10 =
+* Temporarily removed the option "Payment method group"
+* Small fixes
 
-= 3.0.9 =
-* Optimized: Centralized status mapping logic for better maintainability.
-* Improved: Enhanced readability and consistency in `process_result_request` method.
-* Added: WooCommerce 9.7.x Compatibility
-* Added: WordPress 6.7.x Compatibility
-* Fixed: Addressed redundant status checks by introducing a dedicated mapping method.
+= 1.0.9 =
+* Small fix
 
-= 3.0.10 =
-* Added: Read-only IPN URL field in plugin settings
-* Updated: Installation and configuration documentation
-* Improved: Internal code refactoring for better maintainability and readability  
+= 1.0.8 =
+* Fix payment methods error
 
-= 3.0.11 =
-* Fixed: Fixed Incorrect behaviour when pressing the `Back` button in the browser
+= 1.0.7 =
+* Add setting button in plugin area
+* Add skip checkout page option
+* Add select default payment group
+* Add select directpay payment method
+* Add caching for payment methods
 
-= 3.1.1 =
-* Security: Fixed critical vulnerability where forged GET request could mark any order as paid.
-* Security: Added strict validation to prevent processing non-Payop orders via Payop endpoints (payment method check + invoice meta binding).
-* Security: Improved IPN validation by binding Payop invoice/txid to WooCommerce order and rejecting mismatches.
+= 1.0.6 =
+* Add multi-currency
 
-= 3.1.2 =
-* Fixed: Prevented the hosted payment form from reopening on the thank-you page after browser redirects.
-* Improved: Normalized success and fail callback URLs before sending them to Payop.
+= 1.0.5 =
+* Update callback response.
 
-= 3.1.3 =
-* Fixed: Sensitive Data Leakage to Third-Party API.
+= 1.0.4 =
+* Update docs.
+* Code standardization.
 
-= 3.1.4 =
-* Added: Detailed Payop order notes and WooCommerce logs for IPN/callback attempts, validation failures, payment status outcomes, and status update failures.
-* Added: Gateway setting to enable detailed technical WooCommerce logs when needed.
+= 1.0.3 =
+* 2019-03-01
+* Added POST JSON payload processing.
 
-= 3.1.5 =
-* Added: Payment flow order notes for checkout initiation, Payop invoice creation, and redirect/payment page display.
-* Added: Delayed possible-abandonment order note when no callback arrives after the payment page step.
+= 1.0.2 =
+* 2017-01-23
+* Update translation.
+* Change logo.
 
-= 3.1.6 =
-* Security: Verify Payop V2 IPN payment status with the Payop invoice API before marking orders as paid.
-* Security: Validate invoice ID, order ID, amount, and currency against trusted Payop API data before completing orders.
-* Security: Enabled SSL certificate verification for Payop API requests.
+= 1.0.1 =
+* 2017-01-21
+* Update docs.
+* Add more transaltions.
+
+= 1.0.0 =
+* 2019-02-18
+* Small fixes.
