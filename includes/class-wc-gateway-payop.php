@@ -172,11 +172,13 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		if ($this->is_primary_gateway()) {
 			// The primary callback URL handles IPN notifications for every Payop gateway instance.
 			add_action('payop-ipn-request', [$this, 'successful_request']);
-			add_filter('woocommerce_order_needs_payment', [$this, 'prevent_payment_for_failed_orders'], 10, 3);
 
 			// Hide buttons "Buy again".
 			add_action('woocommerce_my_account_my_orders_actions', [$this, 'hide_pay_button_for_failed_orders'], 10, 2);
 			add_filter('render_block', [$this, 'modify_wc_order_confirmation_block_content'], 10, 2);
+			add_filter('woocommerce_thankyou_order_received_title', [$this, 'failed_payment_title'], 10, 2);
+			add_filter('woocommerce_thankyou_order_received_text', [$this, 'failed_payment_text'], 10, 2);
+			add_filter('woocommerce_thankyou_order_failed_text', [$this, 'failed_payment_text'], 10, 2);
 			add_action('payop_check_abandoned_payment', [$this, 'check_abandoned_payment']);
 		}
 
@@ -1585,7 +1587,11 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		$this->log_payop('info', 'Payop fail callback received; awaiting IPN/provider verification', $this->get_payop_request_summary($posted_data), $order);
 
 		$this->empty_cart();
-		wp_safe_redirect($this->get_return_url($order));
+		wp_safe_redirect(add_query_arg(
+			'payopToken',
+			$this->get_payop_browser_return_token($order, 'fail-display'),
+			$this->get_return_url($order)
+		));
 		exit;
 	}
 	 /**
@@ -1599,24 +1605,6 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 			'method' => isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '',
 		]);
 		wp_die('Invalid request', 'Invalid request', 400);
-	}
-
-	/**
-	 * Checks if payment is needed for an order with the Payop payment gateway
-	 * and disables payment for orders with 'failed' status.
-	 *
-	 * @param bool   $needs_payment		The current value indicating whether payment is needed for the order.
-	 * @param object $order				The order object.
-	 * @param array  $valid_order_statuses An array of valid order statuses.
-	 * @return bool Returns false if payment is not required for orders with 'failed' status and the Payop payment gateway.
-	 */
-	public function prevent_payment_for_failed_orders( $needs_payment, $order, $valid_order_statuses )
-	{
-		if ($order->has_status('failed') && $this->order_uses_payop($order)) {
-			$needs_payment = false;
-		}
-
-		return $needs_payment;
 	}
 
 	/**
@@ -2424,6 +2412,32 @@ class WC_Gateway_Payop extends WC_Payment_Gateway {
 		}
 
 		return $actions;
+	}
+
+	public function failed_payment_title($title, $order)
+	{
+		if ($this->should_show_failed_payment($order)) {
+			return __('Payment failed', 'payop-woocommerce');
+		}
+
+		return $title;
+	}
+
+	public function failed_payment_text($text, $order)
+	{
+		if ($this->should_show_failed_payment($order)) {
+			return __('Your payment attempt was unsuccessful.', 'payop-woocommerce');
+		}
+
+		return $text;
+	}
+
+	private function should_show_failed_payment($order)
+	{
+		return $this->order_uses_payop($order)
+			&& ($order->has_status('failed')
+				|| ($order->has_status(['pending', 'on-hold'])
+					&& $this->is_valid_payop_browser_return($order, $_GET, 'fail-display')));
 	}
 
 	/**

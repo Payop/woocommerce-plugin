@@ -1,7 +1,7 @@
 ﻿=== Payop Official ===
 Tags: credit cards, payment methods, payop, payment gateway
-Version: 3.2.3
-Stable tag: 3.2.3
+Version: 3.2.4
+Stable tag: 3.2.4
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -95,6 +95,9 @@ When a customer returns from Payop Checkout and selects a different Payop button
 
 
 == Changelog ==
+
+= 3.2.4 =
+* Fixed an issue where WooCommerce could incorrectly mark an unpaid Payop order as paid.
 
 = 3.2.3 =
 * Fixed: Confirm payments for overdue invoices by authenticating invoice verification requests with the project's Public Key and a SHA-256 signature generated using the Secret Key, without requiring a JWT Token.
